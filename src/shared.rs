@@ -9,11 +9,20 @@
 // e-mail:  mail@agramakov.me
 //
 // *************************************************************************
-mod event;
-mod queue;
-mod shared;
-mod subscriber;
-pub use event::Event;
-pub use queue::EventQueue;
-pub use shared::Shared;
-pub use subscriber::Subscriber;
+use std::sync::{Arc, Mutex};
+
+#[cfg(test)]
+mod tests;
+
+pub type Shared<T> = Arc<Mutex<T>>;
+
+/// Convenience trait to add `into_shared()` to any type
+pub trait IntoShared<T> {
+    fn into_shared(self) -> Shared<T>;
+}
+
+impl<T> IntoShared<T> for T {
+    fn into_shared(self) -> Shared<T> {
+        Arc::new(Mutex::new(self))
+    }
+}
