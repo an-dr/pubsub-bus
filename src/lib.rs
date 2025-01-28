@@ -19,5 +19,5 @@ pub use bus::EventBus;
 pub use event::Event;
 pub use publisher::Publisher;
 pub use queue::EventQueue;
-pub use shared::{IntoShared, Shared};
+pub use shared::{IntoShared, Shared, With};
 pub use subscriber::Subscriber;

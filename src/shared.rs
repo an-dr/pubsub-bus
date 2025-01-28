@@ -26,3 +26,20 @@ impl<ContentType> IntoShared<ContentType> for ContentType {
         Arc::new(Mutex::new(self))
     }
 }
+
+/// Trait to provide a `with` method for `Shared<ContentType>`
+pub trait With<ContentType> {
+    fn with<F>(&mut self, f: F)
+    where
+        F: FnOnce(&mut ContentType);
+}
+
+impl<ContentType> With<ContentType> for Shared<ContentType> {
+    fn with<F>(&mut self, f: F)
+    where
+        F: FnOnce(&mut ContentType),
+    {
+        let mut shared = self.lock().unwrap();
+        f(&mut shared);
+    }
+}
