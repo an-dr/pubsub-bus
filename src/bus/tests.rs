@@ -9,7 +9,6 @@ struct TestEvent {
 
 struct TestSubscriber {
     id: u64,
-    events: Vec<TestEvent>,
 }
 
 impl Subscriber<TestEvent> for TestSubscriber {
@@ -27,18 +26,9 @@ fn test_bus() {
     // Create a bus and subscribers
     let mut bus = EventBus::new();
 
-    let subscriber1 = TestSubscriber {
-        id: 1,
-        events: Vec::new(),
-    }
-    .into_shared();
-    let subscriber2 = TestSubscriber {
-        id: 2,
-        events: Vec::new(),
-    }
-    .into_shared();
+    let subscriber1 = TestSubscriber { id: 1 }.into_shared();
+    let subscriber2 = TestSubscriber { id: 2 }.into_shared();
 
-    // bus.subscribe(Box::new(subscriber1)); TODO consider
     bus.subscribe(subscriber1);
     bus.subscribe(subscriber2);
 
