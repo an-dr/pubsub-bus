@@ -1,16 +1,10 @@
-# eventing_rs
+use eventing_rs::*;
+mod commands;
+mod input;
+mod player;
+use input::Input;
+use player::Player;
 
-Thread-safe one-to-many event system. Simple and easy to use, no complicated setup required.
-
-## Event Publishing
-
-![Publishing](docs/README/structure.drawio.svg)
-
-## Examples
-
-The following example demonstrates how to create an event bus, subscribe players to it, and send events to the bus.
-
-```rust
 fn main() {
     // Create a bus
     let bus = EventBus::new().into_shared();
@@ -28,6 +22,3 @@ fn main() {
     input.send_move(1, 1.0, 2.0);
     input.send_atack(2);
 }
-```
-
-For the full example, see the [examples/basic_game_events](examples/basic_game_events) directory.
