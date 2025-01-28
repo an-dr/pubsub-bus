@@ -14,15 +14,15 @@ use std::sync::{Arc, Mutex};
 #[cfg(test)]
 mod tests;
 
-pub type Shared<T> = Arc<Mutex<T>>;
+pub type Shared<ContentType> = Arc<Mutex<ContentType>>;
 
 /// Convenience trait to add `into_shared()` to any type
-pub trait IntoShared<T> {
-    fn into_shared(self) -> Shared<T>;
+pub trait IntoShared<ContentType> {
+    fn into_shared(self) -> Shared<ContentType>;
 }
 
-impl<T> IntoShared<T> for T {
-    fn into_shared(self) -> Shared<T> {
+impl<ContentType> IntoShared<ContentType> for ContentType {
+    fn into_shared(self) -> Shared<ContentType> {
         Arc::new(Mutex::new(self))
     }
 }

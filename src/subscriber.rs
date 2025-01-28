@@ -14,6 +14,6 @@ use super::Event;
 #[cfg(test)]
 mod tests;
 
-pub trait Subscriber<T> {
-    fn on_event(&mut self, event: &Event<T>);
+pub trait Subscriber<ContentType> {
+    fn on_event(&mut self, event: &Event<ContentType>);
 }

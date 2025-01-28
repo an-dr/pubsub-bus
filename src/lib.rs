@@ -9,11 +9,15 @@
 // e-mail:  mail@agramakov.me
 //
 // *************************************************************************
+mod bus;
 mod event;
+// mod publisher;
 mod queue;
 mod shared;
 mod subscriber;
+pub use bus::EventBus;
 pub use event::Event;
+// pub use publisher::Publisher;
 pub use queue::EventQueue;
-pub use shared::Shared;
+pub use shared::{IntoShared, Shared};
 pub use subscriber::Subscriber;

@@ -12,14 +12,14 @@
 #[cfg(test)]
 mod tests;
 
-pub struct Event<T> {
+pub struct Event<ContentType> {
     id: u64,
     source_id: u64,
-    content: T,
+    content: ContentType,
 }
 
-impl<T> Event<T> {
-    pub fn new(content: T) -> Self {
+impl<ContentType> Event<ContentType> {
+    pub fn new(content: ContentType) -> Self {
         Event {
             id: 0,
             source_id: 0,
@@ -40,17 +40,17 @@ impl<T> Event<T> {
         self.source_id
     }
 
-    pub fn get_content(&self) -> &T {
+    pub fn get_content(&self) -> &ContentType {
         &self.content
     }
 
-    pub fn get_mut_content(&mut self) -> &mut T {
+    pub fn get_mut_content(&mut self) -> &mut ContentType {
         &mut self.content
     }
 }
 
-impl<T> From<T> for Event<T> {
-    fn from(content: T) -> Self {
+impl<ContentType> From<ContentType> for Event<ContentType> {
+    fn from(content: ContentType) -> Self {
         Event::new(content)
     }
 }
