@@ -16,7 +16,7 @@ mod queue;
 mod shared;
 mod subscriber;
 pub use bus::EventBus;
-pub use event::Event;
+pub use event::{Event, IntoEvent};
 pub use publisher::Publisher;
 pub use queue::EventQueue;
 pub use shared::{IntoShared, Shared, With};

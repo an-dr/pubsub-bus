@@ -1,4 +1,4 @@
-use crate::{Event, EventBus, IntoShared, Shared, Subscriber};
+use crate::{event::IntoEvent, Event, EventBus, IntoShared, Shared, Subscriber};
 
 use super::Publisher;
 
@@ -37,10 +37,10 @@ impl TestPublisher {
     }
 
     pub fn publish_to(&self, destination: u64) {
-        let event = Event::new(TestEvent {
+        let event = TestEvent {
             destination,
             value: self.publisher_value,
-        });
+        }.into_event();
 
         self.publisher.publish(&event);
     }

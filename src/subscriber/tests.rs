@@ -1,4 +1,4 @@
-use crate::event::Event;
+use crate::event::{Event, IntoEvent};
 use crate::subscriber::Subscriber;
 
 struct TestSubscriber {
@@ -14,7 +14,7 @@ impl Subscriber<i32> for TestSubscriber {
 #[test]
 fn test_subscriber() {
     let mut subscriber = TestSubscriber { attribute: 0 };
-    let event = Event::new(42);
+    let event = 42.into_event();
 
     subscriber.on_event(&event);
     assert_eq!(subscriber.attribute, 42);

@@ -1,4 +1,4 @@
-use crate::shared::IntoShared;
+use crate::{event::IntoEvent, shared::IntoShared};
 
 use super::{Event, EventBus, Subscriber};
 
@@ -33,14 +33,14 @@ fn test_bus() {
     bus.subscribe(subscriber2);
 
     // Create and publish events
-    let event42 = Event::new(TestEvent {
+    let event42 = TestEvent {
         destination: 1,
         value: 42,
-    });
-    let event24 = Event::new(TestEvent {
+    }.into_event();
+    let event24 = TestEvent {
         destination: 2,
         value: 24,
-    });
+    }.into_event();
 
     bus.publish(&event42);
     bus.publish(&event24);

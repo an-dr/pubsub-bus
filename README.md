@@ -76,7 +76,7 @@ impl Input {
 ```rust
 impl Input {
     pub fn send_move(&self, player_id: u32, x: f32, y: f32) {
-        self.publisher.publish(Event::new(Commands::Move { player_id, x, y }));
+        self.publisher.publish(Commands::Move { player_id, x, y }.into_event());
     }
 }
 ```

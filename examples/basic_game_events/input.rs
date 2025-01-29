@@ -1,5 +1,5 @@
 use crate::commands::Commands;
-use eventing_rs::*;
+use pubsub_bus::*;
 
 pub struct Input {
     device: String,
@@ -17,13 +17,13 @@ impl Input {
     }
 
     pub fn send_move(&self, player_id: u32, x: f32, y: f32) {
-        let event = Event::new(Commands::Move { player_id, x, y });
+        let event = Commands::Move { player_id, x, y }.into_event();
 
         self.publisher.publish(&event);
     }
 
     pub fn send_atack(&self, player_id: u32) {
-        let event = Event::new(Commands::Atack { player_id });
+        let event = Commands::Atack { player_id }.into_event();
 
         self.publisher.publish(&event);
     }

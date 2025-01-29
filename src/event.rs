@@ -49,8 +49,12 @@ impl<ContentType> Event<ContentType> {
     }
 }
 
-impl<ContentType> From<ContentType> for Event<ContentType> {
-    fn from(content: ContentType) -> Self {
-        Event::new(content)
+pub trait IntoEvent<T> {
+    fn into_event(self) -> Event<T>;
+}
+
+impl<T> IntoEvent<T> for T {
+    fn into_event(self) -> Event<T> {
+        Event::new(self)
     }
 }

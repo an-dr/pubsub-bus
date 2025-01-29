@@ -1,5 +1,5 @@
 use crate::commands::Commands;
-use eventing_rs::*;
+use pubsub_bus::*;
 
 pub struct Player {
     pub id: u32,

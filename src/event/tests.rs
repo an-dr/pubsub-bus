@@ -1,12 +1,13 @@
+
 struct TestEvent {
     a: i32,
 }
 
 #[test]
 fn test_event() {
-    use super::Event;
+    use crate::event::IntoEvent;
 
-    let mut event = Event::new(TestEvent { a: 42 });
+    let mut event = TestEvent { a: 42 }.into_event();
 
     assert_eq!(event.get_content().a, 42);
 
