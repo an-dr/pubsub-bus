@@ -1,6 +1,6 @@
 # pubsub-bus
 
-[![Version](https://img.shields.io/github/v/tag/an-dr/pubsub-bus?filter=v*&label=Version&color=blue)](https://github.com/an-dr/pubsub-bus/releases)
+![GitHub Release](https://img.shields.io/github/v/release/an-dr/pubsub-bus)
 
 Thread-safe one-to-many event system. Simple and easy to use. It just works (hopefully).
 
@@ -23,7 +23,7 @@ Thread-safe one-to-many event system. Simple and easy to use. It just works (hop
 ### 1. Add the dependency to your `Cargo.toml`
 
 ```toml
-eventing-rs = "0.1.0"
+eventing-rs = "1.0.0"
 ```
 
 ### 2. Create your events and a bus

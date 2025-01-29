@@ -33,11 +33,3 @@ impl<ContentType> Publisher<ContentType> {
         }
     }
 }
-
-trait WithPublisher<ContentType> {
-    fn get_publisher(&self) -> &Publisher<ContentType>;
-
-    fn publish(&self, event: Event<ContentType>) {
-        self.get_publisher().publish(&event);
-    }
-}
