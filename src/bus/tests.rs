@@ -1,6 +1,6 @@
-use crate::{event::IntoEvent, shared::IntoShared};
-
 use super::{Event, EventBus, Subscriber};
+use crate::event::IntoEvent;
+use shared_type::IntoShared;
 
 struct TestEvent {
     destination: u64,
@@ -36,11 +36,13 @@ fn test_bus() {
     let event42 = TestEvent {
         destination: 1,
         value: 42,
-    }.into_event();
+    }
+    .into_event();
     let event24 = TestEvent {
         destination: 2,
         value: 24,
-    }.into_event();
+    }
+    .into_event();
 
     bus.publish(&event42);
     bus.publish(&event24);
