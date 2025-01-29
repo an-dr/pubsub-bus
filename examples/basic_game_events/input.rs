@@ -1,5 +1,6 @@
 use crate::commands::Commands;
 use pubsub_bus::*;
+use std::sync::{Arc, Mutex};
 
 pub struct Input {
     device: String,
@@ -7,7 +8,7 @@ pub struct Input {
 }
 
 impl Input {
-    pub fn new(bus: Shared<EventBus<Commands>>) -> Self {
+    pub fn new(bus: Arc<Mutex<EventBus<Commands>>>) -> Self {
         let mut publisher = Publisher::new();
         publisher.set_bus(bus);
         Self {

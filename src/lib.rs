@@ -12,10 +12,8 @@
 mod bus;
 mod event;
 mod publisher;
-mod shared;
 mod subscriber;
 pub use bus::EventBus;
 pub use event::{Event, IntoEvent};
 pub use publisher::Publisher;
-pub use shared::{IntoShared, Shared, With};
 pub use subscriber::Subscriber;

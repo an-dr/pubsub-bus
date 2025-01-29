@@ -5,19 +5,18 @@ use commands::Commands;
 use input::Input;
 use player::Player;
 use pubsub_bus::*;
+use std::sync::{Arc, Mutex};
 
 fn main() {
     // Create a bus
-    let mut bus: Shared<EventBus<Commands>> = EventBus::new().into_shared();
+    let bus: Arc<Mutex<EventBus<Commands>>> = Arc::new(Mutex::new(EventBus::new()));
 
     // Create players and subscribe them to the bus
-    let player1 = Player { id: 1 }.into_shared();
-    let player2 = Player { id: 2 }.into_shared();
+    let player1 = Arc::new(Mutex::new(Player { id: 1 }));
+    let player2 = Arc::new(Mutex::new(Player { id: 2 }));
 
-    bus.with(|b| {
-        b.subscribe(player1);
-        b.subscribe(player2)
-    });
+    bus.lock().unwrap().subscribe(player1);
+    bus.lock().unwrap().subscribe(player2);
 
     // Create an input and connect it to the bus
     let input = Input::new(bus.clone());

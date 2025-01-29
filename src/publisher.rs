@@ -9,13 +9,14 @@
 // e-mail:  mail@agramakov.me
 //
 // *************************************************************************
-use crate::{Event, EventBus, Shared};
+use crate::{Event, EventBus};
+use std::sync::{Arc, Mutex};
 
 #[cfg(test)]
 mod tests;
 
 pub struct Publisher<ContentType> {
-    event_bus: Option<Shared<EventBus<ContentType>>>,
+    event_bus: Option<Arc<Mutex<EventBus<ContentType>>>>,
 }
 
 impl<ContentType> Publisher<ContentType> {
@@ -23,7 +24,7 @@ impl<ContentType> Publisher<ContentType> {
         Self { event_bus: None }
     }
 
-    pub fn set_bus(&mut self, bus: Shared<EventBus<ContentType>>) {
+    pub fn set_bus(&mut self, bus: Arc<Mutex<EventBus<ContentType>>>) {
         self.event_bus = Some(bus);
     }
 

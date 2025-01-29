@@ -9,13 +9,14 @@
 // e-mail:  mail@agramakov.me
 //
 // *************************************************************************
-use super::{Event, Shared, Subscriber};
+use super::{Event, Subscriber};
+use std::sync::{Arc, Mutex};
 
 #[cfg(test)]
 mod tests;
 
 pub struct EventBus<ContentType> {
-    subscribers: Vec<Shared<dyn Subscriber<ContentType>>>,
+    subscribers: Vec<Arc<Mutex<dyn Subscriber<ContentType>>>>,
 }
 
 impl<ContentType> EventBus<ContentType> {
@@ -25,7 +26,7 @@ impl<ContentType> EventBus<ContentType> {
         }
     }
 
-    pub fn subscribe(&mut self, subscriber: Shared<dyn Subscriber<ContentType>>) {
+    pub fn subscribe(&mut self, subscriber: Arc<Mutex<dyn Subscriber<ContentType>>>) {
         self.subscribers.push(subscriber);
     }
 
