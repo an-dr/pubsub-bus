@@ -1,6 +1,6 @@
 # pubsub-bus
 
-![GitHub Release](https://img.shields.io/github/v/release/an-dr/pubsub-bus)
+[![GitHub Release](https://img.shields.io/github/v/release/an-dr/pubsub-bus)](https://github.com/an-dr/pubsub-bus/releases)
 
 Thread-safe one-to-many event system. Simple and easy to use. It just works (hopefully).
 
