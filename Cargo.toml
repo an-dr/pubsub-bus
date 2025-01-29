@@ -1,7 +1,15 @@
 [package]
+authors = [ "Andrei Gramakov <mail@agramakov.me>" ]
+categories = [ "concurrency", "asynchronous" ]
+description = "Thread-safe one-to-many event system. Simple and easy to use. It just works (hopefully)."
 edition = "2021"
-name = "eventing_rs"
-version = "0.1.0"
+keywords = [ "publish", "subscribe", "event", "library", "bus" ]
+license = "MIT"
+name = "pubsub-bus"
+readme = "README.md"
+repository = "https://github.com/an-dr/pubsub-bus"
+version = "1.0.0"
+
 
 [profile.release]
 codegen-units = 1
@@ -10,6 +18,3 @@ opt-level = 3
 
 [profile.dev]
 opt-level = 1
-
-[dependencies]
-log = "0.4"
