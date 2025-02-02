@@ -1,5 +1,8 @@
+use shared_type::{IntoShared, Shared};
+
 use crate::event::{Event, IntoEvent};
 use crate::subscriber::Subscriber;
+use crate::{EventBus, Publisher};
 
 struct TestSubscriber {
     attribute: i32,
@@ -11,11 +14,26 @@ impl Subscriber<i32> for TestSubscriber {
     }
 }
 
+struct TestPublisher {
+    pub publisher: Publisher<i32>,
+}
+
+impl TestPublisher {
+
+    pub fn publish(&self, val: i32) {
+        self.publisher.publish(&val.into_event());
+    }
+}
+
 #[test]
 fn test_subscriber() {
-    let mut subscriber = TestSubscriber { attribute: 0 };
-    let event = 42.into_event();
+    let bus: Shared<EventBus<i32>> = EventBus::new().into_shared();
+    
+    let publisher = TestPublisher{ publisher: Publisher::new(bus.clone()) };
+    let subscriber = TestSubscriber { attribute: 0 }.into_shared();
+    
+    bus.lock().unwrap().subscribe(subscriber.clone());
 
-    subscriber.on_event(&event);
-    assert_eq!(subscriber.attribute, 42);
+    publisher.publish(42);
+    assert_eq!(subscriber.lock().unwrap().attribute, 42);
 }

@@ -28,8 +28,7 @@ struct TestPublisher {
 
 impl TestPublisher {
     pub fn new(bus: Shared<EventBus<TestEvent>>, value: i32) -> Self {
-        let mut publisher = Publisher::new();
-        publisher.set_bus(bus);
+        let publisher = Publisher::new(bus);
         Self {
             publisher_value: value,
             publisher,

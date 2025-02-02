@@ -1,3 +1,4 @@
+#[allow(dead_code)] // allow dead code for illustrative purposes
 use crate::commands::Commands;
 use pubsub_bus::*;
 use std::sync::{Arc, Mutex};
@@ -9,11 +10,9 @@ pub struct Input {
 
 impl Input {
     pub fn new(bus: Arc<Mutex<EventBus<Commands>>>) -> Self {
-        let mut publisher = Publisher::new();
-        publisher.set_bus(bus);
         Self {
             device: "keyboard".to_string(),
-            publisher: publisher,
+            publisher: Publisher::new(bus),
         }
     }
 

@@ -16,21 +16,15 @@ use std::sync::{Arc, Mutex};
 mod tests;
 
 pub struct Publisher<ContentType> {
-    event_bus: Option<Arc<Mutex<EventBus<ContentType>>>>,
+    event_bus: Arc<Mutex<EventBus<ContentType>>>,
 }
 
 impl<ContentType> Publisher<ContentType> {
-    pub fn new() -> Self {
-        Self { event_bus: None }
-    }
-
-    pub fn set_bus(&mut self, bus: Arc<Mutex<EventBus<ContentType>>>) {
-        self.event_bus = Some(bus);
+    pub fn new(bus: Arc<Mutex<EventBus<ContentType>>>) -> Self {
+        Self { event_bus: bus }
     }
 
     pub fn publish(&self, event: &Event<ContentType>) {
-        if let Some(bus) = &self.event_bus {
-            bus.lock().unwrap().publish(event);
-        }
+        self.event_bus.lock().unwrap().publish(event);
     }
 }
