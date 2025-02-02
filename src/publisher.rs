@@ -9,7 +9,8 @@
 // e-mail:  mail@agramakov.me
 //
 // *************************************************************************
-use crate::{Event, EventBus};
+use crate::event::IntoEvent;
+use crate::EventBus;
 use std::sync::{Arc, Mutex};
 
 #[cfg(test)]
@@ -24,7 +25,10 @@ impl<ContentType> Publisher<ContentType> {
         Self { event_bus: bus }
     }
 
-    pub fn publish(&self, event: &Event<ContentType>) {
-        self.event_bus.lock().unwrap().publish(event);
+    pub fn publish(&self, content: ContentType) {
+        self.event_bus
+            .lock()
+            .unwrap()
+            .publish(&content.into_event());
     }
 }

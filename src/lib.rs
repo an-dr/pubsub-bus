@@ -14,6 +14,6 @@ mod event;
 mod publisher;
 mod subscriber;
 pub use bus::EventBus;
-pub use event::{Event, IntoEvent};
+pub use event::Event;
 pub use publisher::Publisher;
 pub use subscriber::Subscriber;

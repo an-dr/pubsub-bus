@@ -1,5 +1,5 @@
 use super::Publisher;
-use crate::{event::IntoEvent, Event, EventBus, Subscriber};
+use crate::{Event, EventBus, Subscriber};
 use shared_type::{IntoShared, Shared};
 
 struct TestEvent {
@@ -23,7 +23,7 @@ impl Subscriber<TestEvent> for TestSubscriber {
 
 struct TestPublisher {
     publisher_value: i32,
-    publisher: Publisher<TestEvent>,
+    pub publisher: Publisher<TestEvent>,
 }
 
 impl TestPublisher {
@@ -39,10 +39,9 @@ impl TestPublisher {
         let event = TestEvent {
             destination,
             value: self.publisher_value,
-        }
-        .into_event();
+        };
 
-        self.publisher.publish(&event);
+        self.publisher.publish(event);
     }
 }
 

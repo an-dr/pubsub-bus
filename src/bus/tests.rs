@@ -36,14 +36,12 @@ fn test_bus() {
     let event42 = TestEvent {
         destination: 1,
         value: 42,
-    }
-    .into_event();
+    };
     let event24 = TestEvent {
         destination: 2,
         value: 24,
-    }
-    .into_event();
+    };
 
-    bus.publish(&event42);
-    bus.publish(&event24);
+    bus.publish(event42);
+    bus.publish(event24);
 }

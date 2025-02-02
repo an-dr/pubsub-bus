@@ -21,7 +21,7 @@ struct TestPublisher {
 impl TestPublisher {
 
     pub fn publish(&self, val: i32) {
-        self.publisher.publish(&val.into_event());
+        self.publisher.publish(val);
     }
 }
 

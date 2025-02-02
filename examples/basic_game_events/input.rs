@@ -17,14 +17,14 @@ impl Input {
     }
 
     pub fn send_move(&self, player_id: u32, x: f32, y: f32) {
-        let event = Commands::Move { player_id, x, y }.into_event();
+        let event = Commands::Move { player_id, x, y };
 
-        self.publisher.publish(&event);
+        self.publisher.publish(event);
     }
 
     pub fn send_atack(&self, player_id: u32) {
-        let event = Commands::Atack { player_id }.into_event();
+        let event = Commands::Atack { player_id };
 
-        self.publisher.publish(&event);
+        self.publisher.publish(event);
     }
 }

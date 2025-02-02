@@ -30,9 +30,9 @@ impl<ContentType> EventBus<ContentType> {
         self.subscribers.push(subscriber);
     }
 
-    pub fn publish(&mut self, event: &Event<ContentType>) {
+    pub fn publish(&mut self, event: ContentType) {
         for s in self.subscribers.iter_mut() {
-            s.lock().unwrap().on_event(event);
+            s.lock().unwrap().on_event(event.into_e);
         }
     }
 }
