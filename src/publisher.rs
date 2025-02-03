@@ -26,9 +26,10 @@ impl<ContentType> Publisher<ContentType> {
     }
 
     pub fn publish(&self, content: ContentType) {
+        let mut event = content.into_event();
         self.event_bus
             .lock()
             .unwrap()
-            .publish(&content.into_event());
+            .publish(&mut event);
     }
 }

@@ -42,6 +42,6 @@ fn test_bus() {
         value: 24,
     };
 
-    bus.publish(event42);
-    bus.publish(event24);
+    bus.publish(&mut event42.into_event());
+    bus.publish(&mut event24.into_event());
 }

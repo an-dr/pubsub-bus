@@ -1,6 +1,6 @@
 use shared_type::{IntoShared, Shared};
 
-use crate::event::{Event, IntoEvent};
+use crate::event::{Event};
 use crate::subscriber::Subscriber;
 use crate::{EventBus, Publisher};
 
@@ -10,6 +10,9 @@ struct TestSubscriber {
 
 impl Subscriber<i32> for TestSubscriber {
     fn on_event(&mut self, event: &Event<i32>) {
+        let id = event.get_id();
+        println!("Received event with id: {} and content: {}", id, event.get_content());
+        
         self.attribute = *event.get_content();
     }
 }
@@ -36,4 +39,6 @@ fn test_subscriber() {
 
     publisher.publish(42);
     assert_eq!(subscriber.lock().unwrap().attribute, 42);
+    publisher.publish(24);
+    assert_eq!(subscriber.lock().unwrap().attribute, 24);
 }

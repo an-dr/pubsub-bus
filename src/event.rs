@@ -47,6 +47,10 @@ impl<ContentType> Event<ContentType> {
     pub fn get_mut_content(&mut self) -> &mut ContentType {
         &mut self.content
     }
+
+    pub fn set_id(&mut self, id: u64) {
+        self.id = id;
+    }
 }
 
 pub trait IntoEvent<ContentType> {
