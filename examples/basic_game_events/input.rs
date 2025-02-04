@@ -1,10 +1,9 @@
-#[allow(dead_code)] // allow dead code for illustrative purposes
 use crate::commands::Commands;
 use pubsub_bus::*;
-use std::sync::{Arc, Mutex};
 
+#[allow(dead_code)] // allow dead code for illustrative purposes
 pub struct Input {
-    device: String,
+    device: String, // E.g. "keyboard", "mouse", "gamepad"
     emitter: EventEmitter<Commands>,
 }
 

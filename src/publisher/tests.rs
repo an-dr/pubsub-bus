@@ -1,8 +1,5 @@
-use std::sync::Arc;
-
-use super::{EventEmitter, Publisher};
-use crate::{Event, EventBus, Subscriber};
-use shared_type::{IntoShared, Shared};
+use crate::{Event, EventBus, EventEmitter, Publisher, Subscriber};
+use std::sync::{Arc, Mutex};
 
 struct TestEvent {
     destination: u64,
@@ -58,13 +55,12 @@ fn test_bus() {
     // Create a bus and subscribers
     let bus = Arc::new(EventBus::new());
 
-    let subscriber1 = TestSubscriber { id: 1 }.into_shared();
-    let subscriber2 = TestSubscriber { id: 2 }.into_shared();
+    let subscriber1 = Arc::new(Mutex::new(TestSubscriber { id: 1 }));
+    let subscriber2 = Arc::new(Mutex::new(TestSubscriber { id: 2 }));
 
-    
     let mut publisher1 = TestPublisher::new(42);
     let mut publisher2 = TestPublisher::new(24);
-    
+
     bus.add_subscriber(subscriber1);
     bus.add_subscriber(subscriber2);
     bus.add_publisher(&mut publisher1);

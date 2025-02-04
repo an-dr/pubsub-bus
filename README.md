@@ -34,7 +34,7 @@ pub enum Commands {
     Move { player_id: u32, x: f32, y: f32 },
 }
 
-let bus: Arc<Mutex<EventBus<Commands>>> = Arc::new(Mutex::new(EventBus::new()));
+let bus: Arc<EventBus<Commands>> = Arc::new(EventBus::new());;
 ```
 
 ### 3. Implement the Subscriber trait for your struct and subscribe it to the bus
@@ -48,25 +48,28 @@ impl Subscriber<Commands> for Player {
 
 ...
 
-let player = Arc::new(Mutex::new(Player { id: 1 }));
-bus.lock().unwrap().subscribe(player);
+let player1 = Arc::new(Mutex::new(Player { id: 1 }));
+bus.add_subscriber(player1);
 ```
 
 ### 4. Create a Publisher and pass the bus to it
 
 ```rust
 pub struct Input {
-    publisher: Publisher<Commands>,
+    emitter: EventEmitter<Commands>,
 }
 
-impl Input {
-    pub fn new(bus: Arc<Mutex<EventBus<Commands>>>) -> Self {
-        Self {
-            publisher: Publisher::new(bus),
-        }
+impl Publisher<Commands> for Input {
+    fn get_mut_emitter(&mut self) -> &mut EventEmitter<Commands> {
+        &mut self.emitter
     }
-    ...
 }
+
+...
+
+let mut  input = Input::new();
+bus.add_publisher(&mut input);
+
 ```
 
 ### 5. Send events
@@ -74,7 +77,7 @@ impl Input {
 ```rust
 impl Input {
     pub fn send_move(&self, player_id: u32, x: f32, y: f32) {
-        self.publisher.publish(Commands::Move { player_id, x, y });
+        self.emitter.publish(Commands::Move { player_id, x, y });
     }
 }
 ```
@@ -91,12 +94,11 @@ fn main() {
     // Create players and subscribe them to the bus
     let player1 = Arc::new(Mutex::new(Player { id: 1 }));
     let player2 = Arc::new(Mutex::new(Player { id: 2 }));
+    let mut  input = Input::new();
 
-    bus.lock().unwrap().subscribe(player1.clone());
-    bus.lock().unwrap().subscribe(player2.clone());
-
-    // Create an input and connect it to the bus
-    let input = Input::new(bus.clone());
+    bus.add_subscriber(player1);
+    bus.add_subscriber(player2);
+    bus.add_publisher(&mut input);
 
     // Send some events
     input.send_move(1, 1.0, 2.0);

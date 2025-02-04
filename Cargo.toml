@@ -8,7 +8,7 @@ license = "MIT"
 name = "pubsub-bus"
 readme = "README.md"
 repository = "https://github.com/an-dr/pubsub-bus"
-version = "1.1.1"
+version = "2.0.0"
 
 
 [profile.release]
@@ -23,5 +23,4 @@ opt-level = 1
 log = "0.4"
 
 [dev-dependencies]
-shared-type = "1.0.0"
 simple_logger = "5.0"

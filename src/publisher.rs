@@ -11,7 +11,7 @@
 // *************************************************************************
 use crate::event::IntoEvent;
 use crate::EventBus;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 #[cfg(test)]
 mod tests;

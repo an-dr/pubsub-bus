@@ -14,7 +14,7 @@ fn main() {
     // Create players and subscribe them to the bus
     let player1 = Arc::new(Mutex::new(Player { id: 1 }));
     let player2 = Arc::new(Mutex::new(Player { id: 2 }));
-    let mut  input = Input::new();
+    let mut input = Input::new();
 
     bus.add_subscriber(player1);
     bus.add_subscriber(player2);

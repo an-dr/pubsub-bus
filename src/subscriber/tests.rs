@@ -1,8 +1,7 @@
 use crate::event::Event;
 use crate::subscriber::Subscriber;
 use crate::{EventBus, EventEmitter, Publisher};
-use shared_type::{IntoShared, Shared};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 struct TestSubscriber {
     attribute: i32,
@@ -44,7 +43,7 @@ fn test_subscriber() {
     let mut publisher = TestPublisher {
         publisher: EventEmitter::new(),
     };
-    let subscriber = TestSubscriber { attribute: 0 }.into_shared();
+    let subscriber = Arc::new(Mutex::new(TestSubscriber { attribute: 0 }));
 
     bus.add_subscriber(subscriber.clone());
     bus.add_publisher(&mut publisher);

@@ -9,7 +9,7 @@
 // e-mail:  mail@agramakov.me
 //
 // *************************************************************************
-use super::{Event, Subscriber, Publisher};
+use super::{Event, Publisher, Subscriber};
 use std::sync::{Arc, Mutex, RwLock};
 
 #[cfg(test)]
@@ -48,7 +48,7 @@ impl<ContentType> EventBus<ContentType> {
         let id = self.get_next_id();
         event.set_id(id);
 
-        // notify all subscribers. as we store references only we can use read lock
+        // notify all subscribers
         for s in self.subscribers.read().unwrap().iter() {
             s.lock().unwrap().on_event(&event);
         }
