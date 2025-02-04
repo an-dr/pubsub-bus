@@ -9,22 +9,45 @@
 // e-mail:  mail@agramakov.me
 //
 // *************************************************************************
-use crate::{Event, EventBus};
-use std::sync::{Arc, Mutex};
+use crate::event::IntoEvent;
+use crate::EventBus;
+use std::sync::Arc;
 
 #[cfg(test)]
 mod tests;
 
-pub struct Publisher<ContentType> {
-    event_bus: Arc<Mutex<EventBus<ContentType>>>,
+pub struct EventEmitter<ContentType> {
+    event_bus: Option<Arc<EventBus<ContentType>>>,
 }
 
-impl<ContentType> Publisher<ContentType> {
-    pub fn new(bus: Arc<Mutex<EventBus<ContentType>>>) -> Self {
-        Self { event_bus: bus }
+impl<ContentType> EventEmitter<ContentType> {
+    pub fn with_bus(bus: Arc<EventBus<ContentType>>) -> Self {
+        Self {
+            event_bus: Some(bus),
+        }
     }
 
-    pub fn publish(&self, event: &Event<ContentType>) {
-        self.event_bus.lock().unwrap().publish(event);
+    pub fn new() -> Self {
+        Self { event_bus: None }
     }
+
+    pub fn set_bus(&mut self, bus: Arc<EventBus<ContentType>>) {
+        self.event_bus = Some(bus);
+    }
+
+    pub fn publish(&mut self, content: ContentType) {
+        let mut event = content.into_event();
+        match &mut self.event_bus {
+            None => {
+                panic!("Publisher has no bus");
+            }
+            Some(bus) => {
+                bus.publish(&mut event);
+            }
+        }
+    }
+}
+
+pub trait Publisher<ContentType> {
+    fn get_mut_emitter(&mut self) -> &mut EventEmitter<ContentType>;
 }

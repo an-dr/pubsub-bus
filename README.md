@@ -23,7 +23,7 @@ Thread-safe one-to-many event system. Simple and easy to use. It just works (hop
 ### 1. Add the dependency to your `Cargo.toml`
 
 ```toml
-pubsub-bus = "1.1.0"
+pubsub-bus = "2.0.0"
 ```
 
 ### 2. Create your events and a bus
@@ -34,7 +34,7 @@ pub enum Commands {
     Move { player_id: u32, x: f32, y: f32 },
 }
 
-let bus: Arc<Mutex<EventBus<Commands>>> = Arc::new(Mutex::new(EventBus::new()));
+let bus: Arc<EventBus<Commands>> = Arc::new(EventBus::new());;
 ```
 
 ### 3. Implement the Subscriber trait for your struct and subscribe it to the bus
@@ -48,25 +48,28 @@ impl Subscriber<Commands> for Player {
 
 ...
 
-let player = Arc::new(Mutex::new(Player { id: 1 }));
-bus.lock().unwrap().subscribe(player);
+let player1 = Arc::new(Mutex::new(Player { id: 1 }));
+bus.add_subscriber(player1);
 ```
 
 ### 4. Create a Publisher and pass the bus to it
 
 ```rust
 pub struct Input {
-    publisher: Publisher<Commands>,
+    emitter: EventEmitter<Commands>,
 }
 
-impl Input {
-    pub fn new(bus: Arc<Mutex<EventBus<Commands>>>) -> Self {
-        Self {
-            publisher: Publisher::new(bus),
-        }
+impl Publisher<Commands> for Input {
+    fn get_mut_emitter(&mut self) -> &mut EventEmitter<Commands> {
+        &mut self.emitter
     }
-    ...
 }
+
+...
+
+let mut  input = Input::new();
+bus.add_publisher(&mut input);
+
 ```
 
 ### 5. Send events
@@ -74,7 +77,7 @@ impl Input {
 ```rust
 impl Input {
     pub fn send_move(&self, player_id: u32, x: f32, y: f32) {
-        self.publisher.publish(Commands::Move { player_id, x, y }.into_event());
+        self.emitter.publish(Commands::Move { player_id, x, y });
     }
 }
 ```
@@ -85,18 +88,22 @@ The following example demonstrates how to exchange events between players and an
 
 ```rust
 fn main() {
-    // Create a bus
-    let bus: Arc<Mutex<EventBus<Commands>>> = Arc::new(Mutex::new(EventBus::new()));
+    // Create a shared bus. No mutex as the internal data is already thread-safe.
+    let bus: Arc<EventBus<Commands>> = Arc::new(EventBus::new());
 
-    // Create players and subscribe them to the bus
+    // Players are subscribers = concurently accesible receivers of events.
+    // They have to be wrapped in Arc<Mutex<T>> to be thread-safe.
     let player1 = Arc::new(Mutex::new(Player { id: 1 }));
     let player2 = Arc::new(Mutex::new(Player { id: 2 }));
+    
+    // Input is a publisher. It has to know to which bus it should publish events.
+    let mut input = Input::new();
 
-    bus.lock().unwrap().subscribe(player1.clone());
-    bus.lock().unwrap().subscribe(player2.clone());
-
-    // Create an input and connect it to the bus
-    let input = Input::new(bus.clone());
+    // Subscribers will be added to the bus's list
+    bus.add_subscriber(player1); 
+    bus.add_subscriber(player2);
+    // Bus will register itslef to the input
+    bus.add_publisher(&mut input); 
 
     // Send some events
     input.send_move(1, 1.0, 2.0);
@@ -105,5 +112,3 @@ fn main() {
 ```
 
 For the full example, see the [examples/basic_game_events](examples/basic_game_events) directory.
-
-💡 NOTE: check out my other crate to work with `Arc<Mutex<T>>` more conveniently: <https://crates.io/crates/shared-type>

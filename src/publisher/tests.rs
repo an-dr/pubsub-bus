@@ -1,6 +1,5 @@
-use super::Publisher;
-use crate::{event::IntoEvent, Event, EventBus, Subscriber};
-use shared_type::{IntoShared, Shared};
+use crate::{Event, EventBus, EventEmitter, Publisher, Subscriber};
+use std::sync::{Arc, Mutex};
 
 struct TestEvent {
     destination: u64,
@@ -23,42 +22,49 @@ impl Subscriber<TestEvent> for TestSubscriber {
 
 struct TestPublisher {
     publisher_value: i32,
-    publisher: Publisher<TestEvent>,
+    pub emitter: EventEmitter<TestEvent>,
 }
 
 impl TestPublisher {
-    pub fn new(bus: Shared<EventBus<TestEvent>>, value: i32) -> Self {
-        let publisher = Publisher::new(bus);
+    pub fn new(value: i32) -> Self {
+        let publisher = EventEmitter::new();
         Self {
             publisher_value: value,
-            publisher,
+            emitter: publisher,
         }
     }
 
-    pub fn publish_to(&self, destination: u64) {
+    pub fn publish_to(&mut self, destination: u64) {
         let event = TestEvent {
             destination,
             value: self.publisher_value,
-        }
-        .into_event();
+        };
 
-        self.publisher.publish(&event);
+        self.emitter.publish(event);
+    }
+}
+
+impl Publisher<TestEvent> for TestPublisher {
+    fn get_mut_emitter(&mut self) -> &mut EventEmitter<TestEvent> {
+        &mut self.emitter
     }
 }
 
 #[test]
 fn test_bus() {
     // Create a bus and subscribers
-    let bus = EventBus::new().into_shared();
+    let bus = Arc::new(EventBus::new());
 
-    let subscriber1 = TestSubscriber { id: 1 }.into_shared();
-    let subscriber2 = TestSubscriber { id: 2 }.into_shared();
+    let subscriber1 = Arc::new(Mutex::new(TestSubscriber { id: 1 }));
+    let subscriber2 = Arc::new(Mutex::new(TestSubscriber { id: 2 }));
 
-    bus.lock().unwrap().subscribe(subscriber1);
-    bus.lock().unwrap().subscribe(subscriber2);
+    let mut publisher1 = TestPublisher::new(42);
+    let mut publisher2 = TestPublisher::new(24);
 
-    let publisher1 = TestPublisher::new(bus.clone(), 42);
-    let publisher2 = TestPublisher::new(bus.clone(), 24);
+    bus.add_subscriber(subscriber1);
+    bus.add_subscriber(subscriber2);
+    bus.add_publisher(&mut publisher1);
+    bus.add_publisher(&mut publisher2);
 
     publisher1.publish_to(0);
     publisher1.publish_to(1);
