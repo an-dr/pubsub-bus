@@ -16,20 +16,39 @@ use std::sync::{Arc, Mutex};
 #[cfg(test)]
 mod tests;
 
-pub struct Publisher<ContentType> {
-    event_bus: Arc<Mutex<EventBus<ContentType>>>,
+pub struct EventEmitter<ContentType> {
+    event_bus: Option<Arc<EventBus<ContentType>>>,
 }
 
-impl<ContentType> Publisher<ContentType> {
-    pub fn new(bus: Arc<Mutex<EventBus<ContentType>>>) -> Self {
-        Self { event_bus: bus }
+impl<ContentType> EventEmitter<ContentType> {
+    pub fn with_bus(bus: Arc<EventBus<ContentType>>) -> Self {
+        Self {
+            event_bus: Some(bus),
+        }
     }
 
-    pub fn publish(&self, content: ContentType) {
-        let mut event = content.into_event();
-        self.event_bus
-            .lock()
-            .unwrap()
-            .publish(&mut event);
+    pub fn new() -> Self {
+        Self { event_bus: None }
     }
+
+    pub fn set_bus(&mut self, bus: Arc<EventBus<ContentType>>) {
+        self.event_bus = Some(bus);
+    }
+
+    pub fn publish(&mut self, content: ContentType) {
+        let mut event = content.into_event();
+        match &mut self.event_bus {
+            None => {
+                log::error!("Publisher has no bus");
+                return;
+            }
+            Some(bus) => {
+                bus.publish(&mut event);
+            }
+        }
+    }
+}
+
+pub trait Publisher<ContentType> {
+    fn get_mut_emitter(&mut self) -> &mut EventEmitter<ContentType>;
 }

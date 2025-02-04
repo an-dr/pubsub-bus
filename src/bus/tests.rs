@@ -29,8 +29,8 @@ fn test_bus() {
     let subscriber1 = TestSubscriber { id: 1 }.into_shared();
     let subscriber2 = TestSubscriber { id: 2 }.into_shared();
 
-    bus.subscribe(subscriber1);
-    bus.subscribe(subscriber2);
+    bus.add_subscriber(subscriber1);
+    bus.add_subscriber(subscriber2);
 
     // Create and publish events
     let event42 = TestEvent {

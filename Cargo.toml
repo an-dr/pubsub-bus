@@ -19,5 +19,9 @@ opt-level = 3
 [profile.dev]
 opt-level = 1
 
+[dependencies]
+log = "0.4"
+
 [dev-dependencies]
 shared-type = "1.0.0"
+simple_logger = "5.0"

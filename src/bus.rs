@@ -9,39 +9,47 @@
 // e-mail:  mail@agramakov.me
 //
 // *************************************************************************
-use super::{Event, Subscriber, event::IntoEvent};
-use std::sync::{Arc, Mutex};
+use super::{Event, Subscriber, Publisher};
+use std::sync::{Arc, Mutex, RwLock};
 
 #[cfg(test)]
 mod tests;
 
 pub struct EventBus<ContentType> {
-    next_id: u64,
-    subscribers: Vec<Arc<Mutex<dyn Subscriber<ContentType>>>>,
+    next_event_id: Arc<Mutex<u64>>,
+    // RwLock is we do not expect many writes, but many reads
+    subscribers: RwLock<Vec<Arc<Mutex<dyn Subscriber<ContentType>>>>>,
 }
 
 impl<ContentType> EventBus<ContentType> {
     pub fn new() -> Self {
         Self {
-            next_id: 0,
-            subscribers: Vec::new(),
+            next_event_id: Arc::new(Mutex::new(0)),
+            subscribers: RwLock::new(Vec::new()),
         }
     }
 
-    pub fn subscribe(&mut self, subscriber: Arc<Mutex<dyn Subscriber<ContentType>>>) {
-        self.subscribers.push(subscriber);
-    }
-    
-    pub fn get_next_id(&mut self) -> u64 {
-        let id = self.next_id;
-        self.next_id += 1;
-        id
+    pub fn add_subscriber(&self, subscriber: Arc<Mutex<dyn Subscriber<ContentType>>>) {
+        self.subscribers.write().unwrap().push(subscriber);
     }
 
-    pub fn publish(&mut self, event: &mut Event<ContentType>) {
+    pub fn add_publisher(self: &Arc<Self>, publisher: &mut dyn Publisher<ContentType>) {
+        publisher.get_mut_emitter().set_bus(self.clone());
+    }
+
+    pub fn get_next_id(&self) -> u64 {
+        let mut id = self.next_event_id.lock().unwrap();
+        *id += 1;
+        *id
+    }
+
+    pub fn publish(&self, event: &mut Event<ContentType>) {
+        // reserve a new id for the event
         let id = self.get_next_id();
-        for s in self.subscribers.iter_mut() {
-            event.set_id(id);
+        event.set_id(id);
+
+        // notify all subscribers. as we store references only we can use read lock
+        for s in self.subscribers.read().unwrap().iter() {
             s.lock().unwrap().on_event(&event);
         }
     }

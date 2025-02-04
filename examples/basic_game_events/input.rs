@@ -5,26 +5,32 @@ use std::sync::{Arc, Mutex};
 
 pub struct Input {
     device: String,
-    publisher: Publisher<Commands>,
+    emitter: EventEmitter<Commands>,
 }
 
 impl Input {
-    pub fn new(bus: Arc<Mutex<EventBus<Commands>>>) -> Self {
+    pub fn new() -> Self {
         Self {
             device: "keyboard".to_string(),
-            publisher: Publisher::new(bus),
+            emitter: EventEmitter::new(),
         }
     }
 
-    pub fn send_move(&self, player_id: u32, x: f32, y: f32) {
+    pub fn send_move(&mut self, player_id: u32, x: f32, y: f32) {
         let event = Commands::Move { player_id, x, y };
 
-        self.publisher.publish(event);
+        self.emitter.publish(event);
     }
 
-    pub fn send_atack(&self, player_id: u32) {
+    pub fn send_atack(&mut self, player_id: u32) {
         let event = Commands::Atack { player_id };
 
-        self.publisher.publish(event);
+        self.emitter.publish(event);
+    }
+}
+
+impl Publisher<Commands> for Input {
+    fn get_mut_emitter(&mut self) -> &mut EventEmitter<Commands> {
+        &mut self.emitter
     }
 }
