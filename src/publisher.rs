@@ -39,8 +39,7 @@ impl<ContentType> EventEmitter<ContentType> {
         let mut event = content.into_event();
         match &mut self.event_bus {
             None => {
-                log::error!("Publisher has no bus");
-                return;
+                panic!("Publisher has no bus");
             }
             Some(bus) => {
                 bus.publish(&mut event);

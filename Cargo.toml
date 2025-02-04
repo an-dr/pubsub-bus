@@ -10,7 +10,6 @@ readme = "README.md"
 repository = "https://github.com/an-dr/pubsub-bus"
 version = "2.0.0"
 
-
 [profile.release]
 codegen-units = 1
 lto = true
@@ -18,9 +17,3 @@ opt-level = 3
 
 [profile.dev]
 opt-level = 1
-
-[dependencies]
-log = "0.4"
-
-[dev-dependencies]
-simple_logger = "5.0"
