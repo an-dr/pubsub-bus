@@ -23,7 +23,7 @@ Thread-safe one-to-many event system. Simple and easy to use. It just works (hop
 ### 1. Add the dependency to your `Cargo.toml`
 
 ```toml
-pubsub-bus = "1.1.0"
+pubsub-bus = "2.0.0"
 ```
 
 ### 2. Create your events and a bus
@@ -88,17 +88,22 @@ The following example demonstrates how to exchange events between players and an
 
 ```rust
 fn main() {
-    // Create a bus
-    let bus: Arc<Mutex<EventBus<Commands>>> = Arc::new(Mutex::new(EventBus::new()));
+    // Create a shared bus. No mutex as the internal data is already thread-safe.
+    let bus: Arc<EventBus<Commands>> = Arc::new(EventBus::new());
 
-    // Create players and subscribe them to the bus
+    // Players are subscribers = concurently accesible receivers of events.
+    // They have to be wrapped in Arc<Mutex<T>> to be thread-safe.
     let player1 = Arc::new(Mutex::new(Player { id: 1 }));
     let player2 = Arc::new(Mutex::new(Player { id: 2 }));
-    let mut  input = Input::new();
+    
+    // Input is a publisher. It has to know to which bus it should publish events.
+    let mut input = Input::new();
 
-    bus.add_subscriber(player1);
+    // Subscribers will be added to the bus's list
+    bus.add_subscriber(player1); 
     bus.add_subscriber(player2);
-    bus.add_publisher(&mut input);
+    // Bus will register itslef to the input
+    bus.add_publisher(&mut input); 
 
     // Send some events
     input.send_move(1, 1.0, 2.0);
