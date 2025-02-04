@@ -112,5 +112,3 @@ fn main() {
 ```
 
 For the full example, see the [examples/basic_game_events](examples/basic_game_events) directory.
-
-💡 NOTE: check out my other crate to work with `Arc<Mutex<T>>` more conveniently: <https://crates.io/crates/shared-type>
