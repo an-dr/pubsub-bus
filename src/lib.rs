@@ -9,6 +9,10 @@
 // e-mail:  mail@agramakov.me
 //
 // *************************************************************************
+
+#[cfg(test)]
+mod tests;
+
 mod bus;
 mod event;
 mod publisher;
