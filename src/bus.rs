@@ -17,8 +17,9 @@ mod tests;
 
 pub struct EventBus<ContentType> {
     next_event_id: Arc<Mutex<u64>>,
-    // RwLock is we do not expect many writes, but many reads
+    // RwLock as we do not expect many writes, but many reads
     subscribers: RwLock<Vec<Arc<Mutex<dyn Subscriber<ContentType>>>>>,
+    //Topics: RwLock<HashMap<u32, Vec<u32>>>, // topic_id, subscriber_id 
 }
 
 impl<ContentType> EventBus<ContentType> {
@@ -43,10 +44,18 @@ impl<ContentType> EventBus<ContentType> {
         *id
     }
 
-    pub fn publish(&self, event: &mut Event<ContentType>) {
+    pub fn publish(&self, event: &mut Event<ContentType>, topic_id: Option<u32>) {
         // reserve a new id for the event
         let id = self.get_next_id();
         event.set_id(id);
+        
+        // set the topic id
+        if topic_id == Some(0) {
+            println!("Topic id 0 is the same as no topic id. Use None instead.");
+        }
+        if let Some(topic_id) = topic_id {
+            event.set_topic_id(topic_id);
+        }
 
         // notify all subscribers
         for s in self.subscribers.read().unwrap().iter() {

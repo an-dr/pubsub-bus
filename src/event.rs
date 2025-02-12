@@ -14,6 +14,7 @@ mod tests;
 
 pub struct Event<ContentType> {
     id: u64,
+    topic_id: u32,
     source_id: u64,
     content: ContentType,
 }
@@ -22,6 +23,7 @@ impl<ContentType> Event<ContentType> {
     pub fn new(content: ContentType) -> Self {
         Event {
             id: 0,
+            topic_id: 0,
             source_id: 0,
             content,
         }
@@ -30,6 +32,14 @@ impl<ContentType> Event<ContentType> {
     pub fn set_header(&mut self, id: u64, source_id: u64) {
         self.id = id;
         self.source_id = source_id;
+    }
+    
+    pub fn get_topic_id(&self) -> u32 {
+        self.topic_id
+    }
+    
+    pub fn set_topic_id(&mut self, topic_id: u32) {
+        self.topic_id = topic_id;
     }
 
     pub fn get_id(&self) -> u64 {

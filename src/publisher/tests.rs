@@ -40,7 +40,7 @@ impl TestPublisher {
             value: self.publisher_value,
         };
 
-        self.emitter.publish(event);
+        self.emitter.publish(event, None);
     }
 }
 

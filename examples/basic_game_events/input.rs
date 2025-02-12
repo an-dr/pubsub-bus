@@ -18,13 +18,13 @@ impl Input {
     pub fn send_move(&mut self, player_id: u32, x: f32, y: f32) {
         let event = Commands::Move { player_id, x, y };
 
-        self.emitter.publish(event);
+        self.emitter.publish(event, None);
     }
 
     pub fn send_atack(&mut self, player_id: u32) {
         let event = Commands::Atack { player_id };
 
-        self.emitter.publish(event);
+        self.emitter.publish(event, None);
     }
 }
 

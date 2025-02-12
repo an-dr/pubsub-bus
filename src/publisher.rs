@@ -35,14 +35,14 @@ impl<ContentType> EventEmitter<ContentType> {
         self.event_bus = Some(bus);
     }
 
-    pub fn publish(&mut self, content: ContentType) {
+    pub fn publish(&mut self, content: ContentType, topic_id: Option<u32>) {
         let mut event = content.into_event();
         match &mut self.event_bus {
             None => {
                 panic!("Publisher has no bus");
             }
             Some(bus) => {
-                bus.publish(&mut event);
+                bus.publish(&mut event, topic_id);
             }
         }
     }
