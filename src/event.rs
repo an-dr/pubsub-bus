@@ -13,7 +13,7 @@
 mod tests;
 
 pub struct Event<ContentType> {
-    id: u64,
+    id: usize,
     topic_id: u32,
     source_id: u64,
     content: ContentType,
@@ -29,20 +29,20 @@ impl<ContentType> Event<ContentType> {
         }
     }
 
-    pub fn set_header(&mut self, id: u64, source_id: u64) {
+    pub fn set_header(&mut self, id: usize, source_id: u64) {
         self.id = id;
         self.source_id = source_id;
     }
-    
+
     pub fn get_topic_id(&self) -> u32 {
         self.topic_id
     }
-    
+
     pub fn set_topic_id(&mut self, topic_id: u32) {
         self.topic_id = topic_id;
     }
 
-    pub fn get_id(&self) -> u64 {
+    pub fn get_id(&self) -> usize {
         self.id
     }
 
@@ -58,7 +58,7 @@ impl<ContentType> Event<ContentType> {
         &mut self.content
     }
 
-    pub fn set_id(&mut self, id: u64) {
+    pub fn set_id(&mut self, id: usize) {
         self.id = id;
     }
 }

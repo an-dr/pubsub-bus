@@ -15,5 +15,9 @@ use super::Event;
 mod tests;
 
 pub trait Subscriber<ContentType> {
+    fn get_subscribed_topics(&self) -> Option<Vec<u32>> {
+        None
+    }
+
     fn on_event(&mut self, event: &Event<ContentType>);
 }

@@ -1,4 +1,7 @@
+use core::panic;
+
 use crate::commands::Commands;
+use crate::topic_ids::*;
 use pubsub_bus::*;
 
 #[allow(dead_code)] // allow dead code for illustrative purposes
@@ -15,16 +18,24 @@ impl Input {
         }
     }
 
-    pub fn send_move(&mut self, player_id: u32, x: f32, y: f32) {
+    pub fn send_move(&mut self, topic: u32, x: f32, y: f32) {
+        let player_id = match topic {
+            TOPIC_PLAYER_1 => 1,
+            TOPIC_PLAYER_2 => 2,
+            _ => panic!("Unknown topic"),
+        };
         let event = Commands::Move { player_id, x, y };
-
-        self.emitter.publish(event, None);
+        self.emitter.publish(event, Some(topic));
     }
 
-    pub fn send_atack(&mut self, player_id: u32) {
+    pub fn send_atack(&mut self, topic: u32) {
+        let player_id = match topic {
+            TOPIC_PLAYER_1 => 1,
+            TOPIC_PLAYER_2 => 2,
+            _ => panic!("Unknown topic"),
+        };
         let event = Commands::Atack { player_id };
-
-        self.emitter.publish(event, None);
+        self.emitter.publish(event, Some(topic));
     }
 }
 

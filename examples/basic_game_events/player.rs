@@ -1,4 +1,7 @@
-use crate::commands::Commands;
+use crate::{
+    commands::Commands,
+    topic_ids::{TOPIC_PLAYER_1, TOPIC_PLAYER_2},
+};
 use pubsub_bus::*;
 
 pub struct Player {
@@ -11,23 +14,27 @@ impl Subscriber<Commands> for Player {
         let event_source_id = event.get_source_id();
         match event.get_content() {
             Commands::Move { player_id, x, y } => {
-                if *player_id != self.id {
-                    return;
-                }
                 println!(
-                    "Received event {} from {}: Move({}, {}, {})",
-                    event_id, event_source_id, player_id, x, y
+                    "[Player {}] Received event {} from {}: Move({}, {}, {})",
+                    self.id, event_id, event_source_id, player_id, x, y
                 );
             }
             Commands::Atack { player_id } => {
-                if *player_id != self.id {
-                    return;
-                }
                 println!(
-                    "Received event {} from {}: Atack({})",
-                    event_id, event_source_id, player_id
+                    "[Player {}] Received event {} from {}: Atack({})",
+                    self.id, event_id, event_source_id, player_id
                 );
             }
         }
+    }
+
+    fn get_subscribed_topics(&self) -> Option<Vec<u32>> {
+        if self.id == 1 {
+            return Some(vec![TOPIC_PLAYER_1]);
+        }
+        if self.id == 2 {
+            return Some(vec![TOPIC_PLAYER_2]);
+        }
+        None
     }
 }

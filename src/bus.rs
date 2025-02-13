@@ -16,10 +16,9 @@ use std::sync::{Arc, Mutex, RwLock};
 mod tests;
 
 pub struct EventBus<ContentType> {
-    next_event_id: Arc<Mutex<u64>>,
+    next_event_id: Arc<Mutex<usize>>,
     // RwLock as we do not expect many writes, but many reads
     subscribers: RwLock<Vec<Arc<Mutex<dyn Subscriber<ContentType>>>>>,
-    //Topics: RwLock<HashMap<u32, Vec<u32>>>, // topic_id, subscriber_id 
 }
 
 impl<ContentType> EventBus<ContentType> {
@@ -38,7 +37,7 @@ impl<ContentType> EventBus<ContentType> {
         publisher.get_mut_emitter().set_bus(self.clone());
     }
 
-    pub fn get_next_id(&self) -> u64 {
+    pub fn get_next_id(&self) -> usize {
         let mut id = self.next_event_id.lock().unwrap();
         *id += 1;
         *id
@@ -48,7 +47,7 @@ impl<ContentType> EventBus<ContentType> {
         // reserve a new id for the event
         let id = self.get_next_id();
         event.set_id(id);
-        
+
         // set the topic id
         if topic_id == Some(0) {
             println!("Topic id 0 is the same as no topic id. Use None instead.");
@@ -59,6 +58,15 @@ impl<ContentType> EventBus<ContentType> {
 
         // notify all subscribers
         for s in self.subscribers.read().unwrap().iter() {
+            // if there are topics
+            let topics = s.lock().unwrap().get_subscribed_topics();
+            if let Some(topics) = topics {
+                // if the subscriber is not subscribed to the topic
+                if !topics.contains(&event.get_topic_id()) {
+                    continue;
+                }
+            }
+
             s.lock().unwrap().on_event(&event);
         }
     }

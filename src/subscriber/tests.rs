@@ -26,7 +26,7 @@ struct TestPublisher {
 
 impl TestPublisher {
     pub fn publish(&mut self, val: i32) {
-        self.publisher.publish(val);
+        self.publisher.publish(val, None);
     }
 }
 
