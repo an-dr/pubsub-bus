@@ -16,9 +16,9 @@ use std::sync::{Arc, Mutex, RwLock};
 mod tests;
 
 pub struct EventBus<ContentType> {
-    next_event_id: Arc<Mutex<u64>>,
+    next_event_id: Arc<Mutex<u64>>, // TODO: possible overflow here
     // RwLock is we do not expect many writes, but many reads
-    subscribers: RwLock<Vec<Arc<Mutex<dyn Subscriber<ContentType>>>>>,
+    subscribers: RwLock<Vec<Arc<Mutex<dyn Subscriber<ContentType>>>>>, // TODO: conider generic type?
 }
 
 impl<ContentType> EventBus<ContentType> {

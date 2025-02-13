@@ -14,6 +14,6 @@ use super::Event;
 #[cfg(test)]
 mod tests;
 
-pub trait Subscriber<ContentType>: Send + Sync {
+pub trait Subscriber<ContentType>: Send {
     fn on_event(&mut self, event: &Event<ContentType>);
 }

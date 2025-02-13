@@ -48,6 +48,6 @@ impl<ContentType> EventEmitter<ContentType> {
     }
 }
 
-pub trait Publisher<ContentType> {
+pub trait Publisher<ContentType>: Send {
     fn get_mut_emitter(&mut self) -> &mut EventEmitter<ContentType>;
 }

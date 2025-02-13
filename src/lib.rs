@@ -9,6 +9,7 @@
 // e-mail:  mail@agramakov.me
 //
 // *************************************************************************
+// TODO: eliminate unwraps
 
 #[cfg(test)]
 mod tests;
