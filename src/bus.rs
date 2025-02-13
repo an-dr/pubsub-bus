@@ -15,13 +15,13 @@ use std::sync::{Arc, Mutex, RwLock};
 #[cfg(test)]
 mod tests;
 
-pub struct EventBus<ContentType> {
+pub struct EventBus<ContentType, TopicId: std::cmp::PartialEq> {
     next_event_id: Arc<Mutex<usize>>,
     // RwLock as we do not expect many writes, but many reads
-    subscribers: RwLock<Vec<Arc<Mutex<dyn Subscriber<ContentType>>>>>,
+    subscribers: RwLock<Vec<Arc<Mutex<dyn Subscriber<ContentType, TopicId>>>>>,
 }
 
-impl<ContentType> EventBus<ContentType> {
+impl<ContentType, TopicId: std::cmp::PartialEq> EventBus<ContentType, TopicId> {
     pub fn new() -> Self {
         Self {
             next_event_id: Arc::new(Mutex::new(0)),
@@ -29,11 +29,11 @@ impl<ContentType> EventBus<ContentType> {
         }
     }
 
-    pub fn add_subscriber(&self, subscriber: Arc<Mutex<dyn Subscriber<ContentType>>>) {
+    pub fn add_subscriber(&self, subscriber: Arc<Mutex<dyn Subscriber<ContentType, TopicId>>>) {
         self.subscribers.write().unwrap().push(subscriber);
     }
 
-    pub fn add_publisher(self: &Arc<Self>, publisher: &mut dyn Publisher<ContentType>) {
+    pub fn add_publisher(self: &Arc<Self>, publisher: &mut dyn Publisher<ContentType, TopicId>) {
         publisher.get_mut_emitter().set_bus(self.clone());
     }
 
@@ -43,18 +43,11 @@ impl<ContentType> EventBus<ContentType> {
         *id
     }
 
-    pub fn publish(&self, event: &mut Event<ContentType>, topic_id: Option<u32>) {
+    pub fn publish(&self, event: &mut Event<ContentType, TopicId>, topic_id: Option<TopicId>) {
         // reserve a new id for the event
         let id = self.get_next_id();
         event.set_id(id);
-
-        // set the topic id
-        if topic_id == Some(0) {
-            println!("Topic id 0 is the same as no topic id. Use None instead.");
-        }
-        if let Some(topic_id) = topic_id {
-            event.set_topic_id(topic_id);
-        }
+        event.set_topic_id(topic_id);
 
         // notify all subscribers
         for s in self.subscribers.read().unwrap().iter() {
@@ -62,9 +55,10 @@ impl<ContentType> EventBus<ContentType> {
             let topics = s.lock().unwrap().get_subscribed_topics();
             if let Some(topics) = topics {
                 // if the subscriber is not subscribed to the topic
-                if !topics.contains(&event.get_topic_id()) {
-                    continue;
-                }
+                let topic_id = event.get_topic_id();
+                // if !topics.contains(topic_id) {
+                //     continue;
+                // }
             }
 
             s.lock().unwrap().on_event(&event);

@@ -8,8 +8,8 @@ pub struct Player {
     pub id: u32,
 }
 
-impl Subscriber<Commands> for Player {
-    fn on_event(&mut self, event: &Event<Commands>) {
+impl Subscriber<Commands, u32> for Player {
+    fn on_event(&mut self, event: &Event<Commands, u32>) {
         let event_id = event.get_id();
         let event_source_id = event.get_source_id();
         match event.get_content() {

@@ -12,18 +12,18 @@
 #[cfg(test)]
 mod tests;
 
-pub struct Event<ContentType> {
+pub struct Event<ContentType, TopicId> {
     id: usize,
-    topic_id: u32,
+    topic_id: Option<TopicId>,
     source_id: u64,
     content: ContentType,
 }
 
-impl<ContentType> Event<ContentType> {
-    pub fn new(content: ContentType) -> Self {
+impl<ContentType, TopicId> Event<ContentType, TopicId> {
+    pub fn new(content: ContentType, topic_id: Option<TopicId>) -> Self {
         Event {
             id: 0,
-            topic_id: 0,
+            topic_id,
             source_id: 0,
             content,
         }
@@ -34,11 +34,11 @@ impl<ContentType> Event<ContentType> {
         self.source_id = source_id;
     }
 
-    pub fn get_topic_id(&self) -> u32 {
-        self.topic_id
+    pub fn get_topic_id(&self) -> &Option<TopicId> {
+        &self.topic_id
     }
 
-    pub fn set_topic_id(&mut self, topic_id: u32) {
+    pub fn set_topic_id(&mut self, topic_id: Option<TopicId>) {
         self.topic_id = topic_id;
     }
 
@@ -63,12 +63,12 @@ impl<ContentType> Event<ContentType> {
     }
 }
 
-pub trait IntoEvent<ContentType> {
-    fn into_event(self) -> Event<ContentType>;
+pub trait IntoEvent<ContentType, TopicId> {
+    fn into_event(self, topic: Option<TopicId>) -> Event<ContentType, TopicId>;
 }
 
-impl<ContentType> IntoEvent<ContentType> for ContentType {
-    fn into_event(self) -> Event<ContentType> {
-        Event::new(self)
+impl<ContentType, TopicId> IntoEvent<ContentType, TopicId> for ContentType {
+    fn into_event(self, topic: Option<TopicId>) -> Event<ContentType, TopicId> {
+        Event::new(self, topic)
     }
 }

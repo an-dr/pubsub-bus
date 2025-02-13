@@ -14,10 +14,10 @@ use super::Event;
 #[cfg(test)]
 mod tests;
 
-pub trait Subscriber<ContentType> {
-    fn get_subscribed_topics(&self) -> Option<Vec<u32>> {
+pub trait Subscriber<ContentType, TopicId> {
+    fn get_subscribed_topics(&self) -> Option<Vec<TopicId>> {
         None
     }
 
-    fn on_event(&mut self, event: &Event<ContentType>);
+    fn on_event(&mut self, event: &Event<ContentType, TopicId>);
 }

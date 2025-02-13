@@ -7,7 +7,7 @@ use pubsub_bus::*;
 #[allow(dead_code)] // allow dead code for illustrative purposes
 pub struct Input {
     device: String, // E.g. "keyboard", "mouse", "gamepad"
-    emitter: EventEmitter<Commands>,
+    emitter: EventEmitter<Commands, u32>,
 }
 
 impl Input {
@@ -39,8 +39,8 @@ impl Input {
     }
 }
 
-impl Publisher<Commands> for Input {
-    fn get_mut_emitter(&mut self) -> &mut EventEmitter<Commands> {
+impl Publisher<Commands, u32> for Input {
+    fn get_mut_emitter(&mut self) -> &mut EventEmitter<Commands, u32> {
         &mut self.emitter
     }
 }
