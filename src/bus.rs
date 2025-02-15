@@ -16,12 +16,41 @@ use std::sync::{Arc, Mutex, RwLock};
 mod tests;
 
 pub struct EventBus<ContentType, TopicId: std::cmp::PartialEq> {
+    internal: Arc<EventBusInternal<ContentType, TopicId>>,
+}
+
+impl <ContentType, TopicId: std::cmp::PartialEq> EventBus<ContentType, TopicId> {
+    pub fn new() -> Self {
+        Self {
+            internal: Arc::new(EventBusInternal::new()),
+        }
+    }
+
+    pub fn add_subscriber(&self, subscriber: Arc<Mutex<dyn Subscriber<ContentType, TopicId>>>) {
+        self.internal.add_subscriber(subscriber);
+    }
+
+    
+    pub fn add_publisher(&self, publisher: &mut dyn Publisher<ContentType, TopicId>) {
+        publisher.get_mut_emitter().set_bus(self);
+    }
+    
+    pub fn publish(&self, event: ContentType, topic_id: Option<TopicId>) {
+        self.internal.publish(event, topic_id);
+    }
+    
+    pub fn get_internal(&self) -> Arc<EventBusInternal<ContentType, TopicId>> {
+        self.internal.clone()
+    }
+}
+
+pub struct EventBusInternal<ContentType, TopicId: std::cmp::PartialEq> {
     next_event_id: Arc<Mutex<usize>>,
     // RwLock as we do not expect many writes, but many reads
     subscribers: RwLock<Vec<Arc<Mutex<dyn Subscriber<ContentType, TopicId>>>>>,
 }
 
-impl<ContentType, TopicId: std::cmp::PartialEq> EventBus<ContentType, TopicId> {
+impl<ContentType, TopicId: std::cmp::PartialEq> EventBusInternal<ContentType, TopicId> {
     pub fn new() -> Self {
         Self {
             next_event_id: Arc::new(Mutex::new(0)),
@@ -33,9 +62,6 @@ impl<ContentType, TopicId: std::cmp::PartialEq> EventBus<ContentType, TopicId> {
         self.subscribers.write().unwrap().push(subscriber);
     }
 
-    pub fn add_publisher(self: &Arc<Self>, publisher: &mut dyn Publisher<ContentType, TopicId>) {
-        publisher.get_mut_emitter().set_bus(self.clone());
-    }
 
     pub fn get_next_id(&self) -> usize {
         let mut id = self.next_event_id.lock().unwrap();

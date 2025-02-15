@@ -9,6 +9,7 @@
 // e-mail:  mail@agramakov.me
 //
 // *************************************************************************
+use crate::bus::EventBusInternal;
 use crate::EventBus;
 use std::sync::Arc;
 
@@ -16,13 +17,13 @@ use std::sync::Arc;
 mod tests;
 
 pub struct EventEmitter<ContentType, TopicId: std::cmp::PartialEq> {
-    event_bus: Option<Arc<EventBus<ContentType, TopicId>>>,
+    event_bus: Option<Arc<EventBusInternal<ContentType, TopicId>>>,
 }
 
 impl<ContentType, TopicId: std::cmp::PartialEq> EventEmitter<ContentType, TopicId> {
-    pub fn with_bus(bus: Arc<EventBus<ContentType, TopicId>>) -> Self {
+    pub fn with_bus(bus: &EventBus<ContentType, TopicId>) -> Self {
         Self {
-            event_bus: Some(bus),
+            event_bus: Some(bus.get_internal()),
         }
     }
 
@@ -30,12 +31,11 @@ impl<ContentType, TopicId: std::cmp::PartialEq> EventEmitter<ContentType, TopicI
         Self { event_bus: None }
     }
 
-    pub fn set_bus(&mut self, bus: Arc<EventBus<ContentType, TopicId>>) {
-        self.event_bus = Some(bus);
+    pub fn set_bus(&mut self, bus: &EventBus<ContentType, TopicId>) {
+        self.event_bus = Some(bus.get_internal());
     }
 
     pub fn publish(&mut self, content: ContentType, topic_id: Option<TopicId>) {
-        
         match &mut self.event_bus {
             None => {
                 panic!("Publisher has no bus");

@@ -60,7 +60,7 @@ impl Publisher<TestEvent, u32> for TestPublisher {
 #[test]
 fn test_bus() {
     // Create a bus and subscribers
-    let bus = Arc::new(EventBus::new());
+    let bus = EventBus::new();
 
     let subscriber1 = Arc::new(Mutex::new(TestSubscriber { id: 1 }));
     let subscriber2 = Arc::new(Mutex::new(TestSubscriber { id: 2 }));

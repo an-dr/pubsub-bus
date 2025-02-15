@@ -25,7 +25,7 @@ impl Subscriber<i32, u32> for TestSubscriber {
 
 #[test]
 fn test_subscriber() {
-    let bus: Arc<EventBus<i32, u32>> = Arc::new(EventBus::new());
+    let bus: EventBus<i32, u32> = EventBus::new();
 
     let subscriber = Arc::new(Mutex::new(TestSubscriber { attribute: 0 }));
     bus.add_subscriber(subscriber.clone());
