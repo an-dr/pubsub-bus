@@ -10,10 +10,10 @@
 //
 // *************************************************************************
 mod bus;
-mod event;
+mod bus_event;
 mod publisher;
 mod subscriber;
 pub use bus::EventBus;
-pub use event::{Event, IntoEvent};
+pub use bus_event::BusEvent;
 pub use publisher::{EventEmitter, Publisher};
 pub use subscriber::Subscriber;

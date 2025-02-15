@@ -23,7 +23,7 @@ Thread-safe one-to-many event system. Simple and easy to use. It just works (hop
 ### 1. Add the dependency to your `Cargo.toml`
 
 ```toml
-pubsub-bus = "2.0.0"
+pubsub-bus = "3.0.0"
 ```
 
 ### 2. Create your events and a bus

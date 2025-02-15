@@ -11,7 +11,7 @@ use topic_ids::{TOPIC_PLAYER_1, TOPIC_PLAYER_2};
 
 fn main() {
     // Create a bus
-    let bus: Arc<EventBus<Commands, u32>> = Arc::new(EventBus::new());
+    let bus: Arc<EventBus<Commands, String>> = Arc::new(EventBus::new());
 
     // Create players and subscribe them to the bus
     let player1 = Arc::new(Mutex::new(Player { id: 1 }));

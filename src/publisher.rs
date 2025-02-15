@@ -9,7 +9,6 @@
 // e-mail:  mail@agramakov.me
 //
 // *************************************************************************
-use crate::event::IntoEvent;
 use crate::EventBus;
 use std::sync::Arc;
 
@@ -37,13 +36,12 @@ impl<ContentType, TopicId: std::cmp::PartialEq> EventEmitter<ContentType, TopicI
 
     pub fn publish(&mut self, content: ContentType, topic_id: Option<TopicId>) {
         
-        let mut event = content.into_event(topic_id);
         match &mut self.event_bus {
             None => {
                 panic!("Publisher has no bus");
             }
             Some(bus) => {
-                bus.publish(&mut event, topic_id);
+                bus.publish(content, topic_id);
             }
         }
     }

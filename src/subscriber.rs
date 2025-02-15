@@ -9,7 +9,7 @@
 // e-mail:  mail@agramakov.me
 //
 // *************************************************************************
-use super::Event;
+use super::BusEvent;
 
 #[cfg(test)]
 mod tests;
@@ -19,5 +19,5 @@ pub trait Subscriber<ContentType, TopicId> {
         None
     }
 
-    fn on_event(&mut self, event: &Event<ContentType, TopicId>);
+    fn on_event(&mut self, event: &BusEvent<ContentType, TopicId>);
 }

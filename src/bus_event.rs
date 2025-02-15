@@ -9,19 +9,20 @@
 // e-mail:  mail@agramakov.me
 //
 // *************************************************************************
+
 #[cfg(test)]
 mod tests;
 
-pub struct Event<ContentType, TopicId> {
+pub struct BusEvent<ContentType, TopicId> {
     id: usize,
     topic_id: Option<TopicId>,
     source_id: u64,
     content: ContentType,
 }
 
-impl<ContentType, TopicId> Event<ContentType, TopicId> {
+impl<ContentType, TopicId> BusEvent<ContentType, TopicId> {
     pub fn new(content: ContentType, topic_id: Option<TopicId>) -> Self {
-        Event {
+        BusEvent {
             id: 0,
             topic_id,
             source_id: 0,
@@ -64,11 +65,11 @@ impl<ContentType, TopicId> Event<ContentType, TopicId> {
 }
 
 pub trait IntoEvent<ContentType, TopicId> {
-    fn into_event(self, topic: Option<TopicId>) -> Event<ContentType, TopicId>;
+    fn into_event(self, topic: Option<TopicId>) -> BusEvent<ContentType, TopicId>;
 }
 
 impl<ContentType, TopicId> IntoEvent<ContentType, TopicId> for ContentType {
-    fn into_event(self, topic: Option<TopicId>) -> Event<ContentType, TopicId> {
-        Event::new(self, topic)
+    fn into_event(self, topic: Option<TopicId>) -> BusEvent<ContentType, TopicId> {
+        BusEvent::new(self, topic)
     }
 }

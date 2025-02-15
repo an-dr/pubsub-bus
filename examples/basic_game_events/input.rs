@@ -7,7 +7,7 @@ use pubsub_bus::*;
 #[allow(dead_code)] // allow dead code for illustrative purposes
 pub struct Input {
     device: String, // E.g. "keyboard", "mouse", "gamepad"
-    emitter: EventEmitter<Commands, u32>,
+    emitter: EventEmitter<Commands, String>,
 }
 
 impl Input {
@@ -18,29 +18,29 @@ impl Input {
         }
     }
 
-    pub fn send_move(&mut self, topic: u32, x: f32, y: f32) {
+    pub fn send_move(&mut self, topic: &str, x: f32, y: f32) {
         let player_id = match topic {
             TOPIC_PLAYER_1 => 1,
             TOPIC_PLAYER_2 => 2,
             _ => panic!("Unknown topic"),
         };
         let event = Commands::Move { player_id, x, y };
-        self.emitter.publish(event, Some(topic));
+        self.emitter.publish(event, Some(topic.to_string()));
     }
 
-    pub fn send_atack(&mut self, topic: u32) {
+    pub fn send_atack(&mut self, topic: &str) {
         let player_id = match topic {
             TOPIC_PLAYER_1 => 1,
             TOPIC_PLAYER_2 => 2,
             _ => panic!("Unknown topic"),
         };
         let event = Commands::Atack { player_id };
-        self.emitter.publish(event, Some(topic));
+        self.emitter.publish(event, Some(topic.to_string()));
     }
 }
 
-impl Publisher<Commands, u32> for Input {
-    fn get_mut_emitter(&mut self) -> &mut EventEmitter<Commands, u32> {
+impl Publisher<Commands, String> for Input {
+    fn get_mut_emitter(&mut self) -> &mut EventEmitter<Commands, String> {
         &mut self.emitter
     }
 }

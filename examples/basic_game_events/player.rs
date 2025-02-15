@@ -8,8 +8,8 @@ pub struct Player {
     pub id: u32,
 }
 
-impl Subscriber<Commands, u32> for Player {
-    fn on_event(&mut self, event: &Event<Commands, u32>) {
+impl Subscriber<Commands, String> for Player {
+    fn on_event(&mut self, event: &BusEvent<Commands, String>) {
         let event_id = event.get_id();
         let event_source_id = event.get_source_id();
         match event.get_content() {
@@ -28,12 +28,12 @@ impl Subscriber<Commands, u32> for Player {
         }
     }
 
-    fn get_subscribed_topics(&self) -> Option<Vec<u32>> {
+    fn get_subscribed_topics(&self) -> Option<Vec<String>> {
         if self.id == 1 {
-            return Some(vec![TOPIC_PLAYER_1]);
+            return Some(vec![TOPIC_PLAYER_1.to_string()]);
         }
         if self.id == 2 {
-            return Some(vec![TOPIC_PLAYER_2]);
+            return Some(vec![TOPIC_PLAYER_2.to_string()]);
         }
         None
     }

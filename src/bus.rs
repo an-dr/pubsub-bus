@@ -9,7 +9,7 @@
 // e-mail:  mail@agramakov.me
 //
 // *************************************************************************
-use super::{Event, Publisher, Subscriber};
+use super::{BusEvent, Publisher, Subscriber};
 use std::sync::{Arc, Mutex, RwLock};
 
 #[cfg(test)]
@@ -43,25 +43,25 @@ impl<ContentType, TopicId: std::cmp::PartialEq> EventBus<ContentType, TopicId> {
         *id
     }
 
-    pub fn publish(&self, event: &mut Event<ContentType, TopicId>, topic_id: Option<TopicId>) {
+    pub fn publish(&self, event: ContentType, topic_id: Option<TopicId>) {
         // reserve a new id for the event
         let id = self.get_next_id();
-        event.set_id(id);
-        event.set_topic_id(topic_id);
-
+        
+        let mut event_internal = BusEvent::new(event, topic_id);
+        event_internal.set_id(id);
+        
         // notify all subscribers
         for s in self.subscribers.read().unwrap().iter() {
             // if there are topics
             let topics = s.lock().unwrap().get_subscribed_topics();
             if let Some(topics) = topics {
                 // if the subscriber is not subscribed to the topic
-                let topic_id = event.get_topic_id();
-                // if !topics.contains(topic_id) {
-                //     continue;
-                // }
+                if !topics.contains(event_internal.get_topic_id().as_ref().unwrap()) {
+                    continue;
+                }
             }
 
-            s.lock().unwrap().on_event(&event);
+            s.lock().unwrap().on_event(&event_internal);
         }
     }
 }
