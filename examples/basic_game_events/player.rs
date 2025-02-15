@@ -1,6 +1,5 @@
 use crate::{
-    commands::Commands,
-    topic_ids::{TOPIC_PLAYER_1, TOPIC_PLAYER_2},
+    commands::Commands, topic_ids::TopicIds,
 };
 use pubsub_bus::*;
 
@@ -8,8 +7,8 @@ pub struct Player {
     pub id: u32,
 }
 
-impl Subscriber<Commands, String> for Player {
-    fn on_event(&mut self, event: &BusEvent<Commands, String>) {
+impl Subscriber<Commands, TopicIds> for Player {
+    fn on_event(&mut self, event: &BusEvent<Commands, TopicIds>) {
         let event_id = event.get_id();
         let event_source_id = event.get_source_id();
         match event.get_content() {
@@ -28,12 +27,12 @@ impl Subscriber<Commands, String> for Player {
         }
     }
 
-    fn get_subscribed_topics(&self) -> Option<Vec<String>> {
+    fn get_subscribed_topics(&self) -> Option<Vec<TopicIds>> {
         if self.id == 1 {
-            return Some(vec![TOPIC_PLAYER_1.to_string()]);
+            return Some(vec![TopicIds::Player1]);
         }
         if self.id == 2 {
-            return Some(vec![TOPIC_PLAYER_2.to_string()]);
+            return Some(vec![TopicIds::Player2]);
         }
         None
     }
