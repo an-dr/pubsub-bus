@@ -27,9 +27,12 @@ fn test_bus() {
 
     let subscriber1 = Arc::new(Mutex::new(TestSubscriber { id: 1 }));
     let subscriber2 = Arc::new(Mutex::new(TestSubscriber { id: 2 }));
+    let subscriber4 = TestSubscriber { id: 4 };
 
-    bus.add_subscriber(subscriber1);
-    bus.add_subscriber(subscriber2);
+    bus.add_subscriber_shared(subscriber1);
+    bus.add_subscriber_shared(subscriber2);
+    bus.add_subscriber(subscriber4);
+    
 
     // Create and publish events
     let event42 = TestEvent {
@@ -40,7 +43,18 @@ fn test_bus() {
         destination: 2,
         value: 24,
     };
+    let event64 = TestEvent {
+        destination: 3,
+        value: 64,
+    };
+    
+    let event84 = TestEvent {
+        destination: 4,
+        value: 84,
+    };
 
     bus.publish(event42, None);
     bus.publish(event24, None);
+    bus.publish(event64, None);
+    bus.publish(event84, None);
 }

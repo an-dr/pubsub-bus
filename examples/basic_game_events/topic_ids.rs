@@ -1,6 +1,6 @@
 
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(PartialEq)]
 pub enum TopicIds {
     Player1,
     Player2,

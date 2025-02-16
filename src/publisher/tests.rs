@@ -68,8 +68,8 @@ fn test_bus() {
     let mut publisher1 = TestPublisher::new(42);
     let mut publisher2 = TestPublisher::new(24);
 
-    bus.add_subscriber(subscriber1);
-    bus.add_subscriber(subscriber2);
+    bus.add_subscriber_shared(subscriber1);
+    bus.add_subscriber_shared(subscriber2);
     bus.add_publisher(&mut publisher1);
     bus.add_publisher(&mut publisher2);
 

@@ -8,13 +8,14 @@
 // site:    https://agramakov.me
 // e-mail:  mail@agramakov.me
 //
-// *************************************************************************
+// *************************************************************************\
+
 use super::BusEvent;
 
 #[cfg(test)]
 mod tests;
 
-pub trait Subscriber<ContentType, TopicId> {
+pub trait Subscriber<ContentType, TopicId>: Send + Sync {
     fn get_subscribed_topics(&self) -> Option<Vec<TopicId>> {
         None
     }

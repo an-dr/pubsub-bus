@@ -28,7 +28,7 @@ fn test_subscriber() {
     let bus: EventBus<i32, u32> = EventBus::new();
 
     let subscriber = Arc::new(Mutex::new(TestSubscriber { attribute: 0 }));
-    bus.add_subscriber(subscriber.clone());
+    bus.add_subscriber_shared(subscriber.clone());
 
     bus.publish(42, Some(42));
     assert_eq!(subscriber.lock().unwrap().attribute, 42);
