@@ -52,10 +52,8 @@ impl<ContentType, TopicId: std::cmp::PartialEq> EventEmitter<ContentType, TopicI
         Ok(())
     }
 
-    pub fn set_source_id(&mut self, source_id: u64) {
-        self.source_id = source_id;
-    }
-
+    /// Publish an event to the event bus.
+    /// If topic_id is None, the event will be sent to all subscribers.
     pub fn publish(&mut self, content: ContentType, topic_id: Option<TopicId>) {
         match &mut self.event_bus {
             None => {
@@ -71,5 +69,12 @@ impl<ContentType, TopicId: std::cmp::PartialEq> EventEmitter<ContentType, TopicI
 /// Publisher is a trait that defines a publisher to the event bus.
 /// Publisher is expected to care an EventEmitter.
 pub trait Publisher<ContentType, TopicId: std::cmp::PartialEq> {
+    /// Get the emitter of the publisher. Has to be implemented by the publisher.
     fn get_mut_emitter(&mut self) -> &mut EventEmitter<ContentType, TopicId>;
+
+    /// Default implementation to Publish an event to the event bus.
+    /// If topic_id is None, the event will be sent to all subscribers.
+    fn publish(&mut self, content: ContentType, topic_id: Option<TopicId>) {
+        self.get_mut_emitter().publish(content, topic_id);
+    }
 }

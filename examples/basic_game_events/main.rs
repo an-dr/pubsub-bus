@@ -20,11 +20,11 @@ fn main() {
 
     bus.add_subscriber(player1);
     bus.add_subscriber(player2);
-    bus.add_publisher(&mut input);
+    bus.add_publisher(&mut input, Some(85)).unwrap();
 
     // Send some events
-    input.send_move(TopicIds::Player1, 1.0, 2.0);
-    input.send_move(TopicIds::Player2, 1.0, 2.0);
-    input.send_atack(TopicIds::Player2);
-    input.send_atack(TopicIds::Player1);
+    input.publish(Commands::Move { dx: 1.0, dy: 2.0 }, Some(TopicIds::Player2));
+    input.publish(Commands::Move { dx: 1.0, dy: 2.0 }, Some(TopicIds::Player1));
+    input.publish(Commands::Atack, Some(TopicIds::Player2));
+    input.publish(Commands::Atack, Some(TopicIds::Player1));
 }

@@ -1,4 +1,4 @@
 pub enum Commands {
-    Atack { player_id: u32 },
-    Move { player_id: u32, x: f32, y: f32 },
+    Atack,
+    Move { dx: f32, dy: f32 },
 }

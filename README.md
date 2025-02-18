@@ -4,7 +4,17 @@
 
 Thread-safe one-to-many event system. Simple and easy to use. It just works (hopefully).
 
+Features:
+
+- 📃 Event Topic Filtering
+- 🔢 Unique event and publisher IDs
+- 🔀 Thread-safe
+- 🧱 No unsafe code
+
+## Table of Contents
+
 - [pubsub-bus](#pubsub-bus)
+    - [Table of Contents](#table-of-contents)
     - [⚙️ What it does (Without words)](#️-what-it-does-without-words)
     - [🚀 Quick Start](#-quick-start)
         - [1. Add the dependency to your `Cargo.toml`](#1-add-the-dependency-to-your-cargotoml)
@@ -31,7 +41,7 @@ pubsub-bus = "3.0.0"
 ```rust
 enum Commands {
     Atack { player_id: u32 },
-    Move { player_id: u32, x: f32, y: f32 },
+    Move { player_id: u32, dx: f32, dy: f32 },
 }
 
 #[derive(PartialEq)]
@@ -79,18 +89,18 @@ impl Publisher<Commands, TopicIds> for Input {
 ...
 
 let mut  input = Input::new();
-bus.add_publisher(&mut input);
+bus.add_publisher(&mut input, None); // None -> Auto assign ID
 
 ```
 
 ### 5. Send events
 
 ```rust
-impl Input {
-    pub fn send_move(&self, player_id: u32, x: f32, y: f32) {
-        self.emitter.publish(Commands::Move { player_id, x, y });
-    }
-}
+input.publish(  Commands::Move { dx: 1.0, dy: 2.0 }, 
+                Some(TopicIds::Player1) );
+                
+input.publish(  Commands::Atack, 
+                Some(TopicIds::Player2) );
 ```
 
 ## 📖 Examples
@@ -109,13 +119,15 @@ fn main() {
 
     bus.add_subscriber(player1);
     bus.add_subscriber(player2);
-    bus.add_publisher(&mut input);
+    bus.add_publisher(&mut input, Some(85)).unwrap();
 
     // Send some events
-    input.send_move(TopicIds::Player1, 1.0, 2.0);
-    input.send_move(TopicIds::Player2, 1.0, 2.0);
-    input.send_atack(TopicIds::Player2);
-    input.send_atack(TopicIds::Player1);
+    input.publish(Commands::Move { dx: 1.0, dy: 2.0 }, 
+                  Some(TopicIds::Player2));
+    input.publish(Commands::Move { dx: 1.0, dy: 2.0 }, 
+                  Some(TopicIds::Player1));
+    input.publish(Commands::Atack, Some(TopicIds::Player2));
+    input.publish(Commands::Atack, Some(TopicIds::Player1));
 }
 ```
 

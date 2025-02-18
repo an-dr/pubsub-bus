@@ -14,7 +14,7 @@
 mod tests;
 
 /// A struct that represents an event that can be sent over the event bus.
-/// The content is user-defined. Besudes the content, the event has an id, 
+/// The content is user-defined. Besudes the content, the event has an id,
 /// a source id, and a topic id.
 pub struct BusEvent<ContentType, TopicId> {
     id: usize,
@@ -24,26 +24,17 @@ pub struct BusEvent<ContentType, TopicId> {
 }
 
 impl<ContentType, TopicId> BusEvent<ContentType, TopicId> {
-    pub fn new(content: ContentType, topic_id: Option<TopicId>) -> Self {
+    pub fn new(id: usize, source_id: u64, topic_id: Option<TopicId>, content: ContentType) -> Self {
         BusEvent {
-            id: 0,
+            id,
             topic_id,
-            source_id: 0,
+            source_id,
             content,
         }
     }
 
-    pub fn set_header(&mut self, id: usize, source_id: u64) {
-        self.id = id;
-        self.source_id = source_id;
-    }
-
     pub fn get_topic_id(&self) -> &Option<TopicId> {
         &self.topic_id
-    }
-
-    pub fn set_topic_id(&mut self, topic_id: Option<TopicId>) {
-        self.topic_id = topic_id;
     }
 
     pub fn get_id(&self) -> usize {
@@ -60,19 +51,5 @@ impl<ContentType, TopicId> BusEvent<ContentType, TopicId> {
 
     pub fn get_mut_content(&mut self) -> &mut ContentType {
         &mut self.content
-    }
-
-    pub fn set_id(&mut self, id: usize) {
-        self.id = id;
-    }
-}
-
-pub trait IntoEvent<ContentType, TopicId> {
-    fn into_event(self, topic: Option<TopicId>) -> BusEvent<ContentType, TopicId>;
-}
-
-impl<ContentType, TopicId> IntoEvent<ContentType, TopicId> for ContentType {
-    fn into_event(self, topic: Option<TopicId>) -> BusEvent<ContentType, TopicId> {
-        BusEvent::new(self, topic)
     }
 }

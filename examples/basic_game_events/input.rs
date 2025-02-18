@@ -15,24 +15,6 @@ impl Input {
             emitter: EventEmitter::new(),
         }
     }
-
-    pub fn send_move(&mut self, topic: TopicIds, x: f32, y: f32) {
-        let player_id = match topic {
-            TopicIds::Player1 => 1,
-            TopicIds::Player2 => 2,
-        };
-        let event = Commands::Move { player_id, x, y };
-        self.emitter.publish(event, Some(topic));
-    }
-
-    pub fn send_atack(&mut self, topic: TopicIds) {
-        let player_id = match topic {
-            TopicIds::Player1 => 1,
-            TopicIds::Player2 => 2,
-        };
-        let event = Commands::Atack { player_id };
-        self.emitter.publish(event, Some(topic));
-    }
 }
 
 impl Publisher<Commands, TopicIds> for Input {

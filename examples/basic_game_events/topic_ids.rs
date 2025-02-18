@@ -1,5 +1,3 @@
-
-
 #[derive(PartialEq)]
 pub enum TopicIds {
     Player1,

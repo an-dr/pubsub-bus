@@ -15,6 +15,7 @@ use std::sync::{Arc, Mutex};
 #[cfg(test)]
 mod tests;
 
+/// The Event Bus itself. Add subscribers and publishers to it.
 pub struct EventBus<ContentType, TopicId: std::cmp::PartialEq> {
     internal: Arc<EventBusInternal<ContentType, TopicId>>,
 }

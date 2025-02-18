@@ -81,11 +81,8 @@ impl<ContentType, TopicId: std::cmp::PartialEq> EventBusInternal<ContentType, To
     }
 
     pub fn publish(&self, event: ContentType, topic_id: Option<TopicId>, source_id: u64) {
-        // reserve a new id for the event
-        let id = self.get_next_id();
-
-        let mut event_internal = BusEvent::new(event, topic_id);
-        event_internal.set_header(id, source_id);
+        let id = self.get_next_id(); // reserve a new id for the event
+        let event_internal = BusEvent::new(id, source_id, topic_id, event);
 
         // notify all subscribers
         for s in self.subscribers.read().unwrap().iter() {

@@ -16,6 +16,9 @@ use super::BusEvent;
 mod tests;
 
 /// A trait that defines a subscriber to the event bus.
+/// Override get_subscribed_topics to return a list of topics the subscriber is interested in.
+/// If the subscriber is interested in all topics, thre si a default implementation that returns None.
+/// Override on_event to handle the event.
 pub trait Subscriber<ContentType, TopicId>: Send + Sync {
     fn get_subscribed_topics(&self) -> Option<Vec<TopicId>> {
         None
