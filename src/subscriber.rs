@@ -8,12 +8,21 @@
 // site:    https://agramakov.me
 // e-mail:  mail@agramakov.me
 //
-// *************************************************************************
-use super::Event;
+// *************************************************************************\
+
+use super::BusEvent;
 
 #[cfg(test)]
 mod tests;
 
-pub trait Subscriber<ContentType> {
-    fn on_event(&mut self, event: &Event<ContentType>);
+/// A trait that defines a subscriber to the event bus.
+/// Override get_subscribed_topics to return a list of topics the subscriber is interested in.
+/// If the subscriber is interested in all topics, thre si a default implementation that returns None.
+/// Override on_event to handle the event.
+pub trait Subscriber<ContentType, TopicId>: Send + Sync {
+    fn get_subscribed_topics(&self) -> Option<Vec<TopicId>> {
+        None
+    }
+
+    fn on_event(&mut self, event: &BusEvent<ContentType, TopicId>);
 }

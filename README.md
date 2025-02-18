@@ -4,7 +4,17 @@
 
 Thread-safe one-to-many event system. Simple and easy to use. It just works (hopefully).
 
+Features:
+
+- 📃 Event Topic Filtering
+- 🔢 Unique event and publisher IDs
+- 🔀 Thread-safe
+- 🧱 No unsafe code
+
+## Table of Contents
+
 - [pubsub-bus](#pubsub-bus)
+    - [Table of Contents](#table-of-contents)
     - [⚙️ What it does (Without words)](#️-what-it-does-without-words)
     - [🚀 Quick Start](#-quick-start)
         - [1. Add the dependency to your `Cargo.toml`](#1-add-the-dependency-to-your-cargotoml)
@@ -23,32 +33,43 @@ Thread-safe one-to-many event system. Simple and easy to use. It just works (hop
 ### 1. Add the dependency to your `Cargo.toml`
 
 ```toml
-pubsub-bus = "2.0.0"
+pubsub-bus = "3.0.0"
 ```
 
 ### 2. Create your events and a bus
 
 ```rust
-pub enum Commands {
+enum Commands {
     Atack { player_id: u32 },
-    Move { player_id: u32, x: f32, y: f32 },
+    Move { player_id: u32, dx: f32, dy: f32 },
 }
 
-let bus: Arc<EventBus<Commands>> = Arc::new(EventBus::new());;
+#[derive(PartialEq)]
+enum TopicIds {
+    Player1,
+    Player2,
+}
+
+
+let bus: EventBus<Commands, TopicIds> = EventBus::new();
 ```
 
 ### 3. Implement the Subscriber trait for your struct and subscribe it to the bus
 
 ```rust
-impl Subscriber<Commands> for Player {
-    fn on_event(&mut self, event: &Event<Commands>) {
-        // Handle the event
+impl Subscriber<Commands, TopicIds> for Player {
+    fn on_event(&mut self, event: &BusEvent<Commands, TopicIds>) {
+        let event_id = event.get_id();
+        let event_source_id = event.get_source_id();
+        match event.get_content() {
+         ...
+        }
     }
 }
 
 ...
 
-let player1 = Arc::new(Mutex::new(Player { id: 1 }));
+let player1 = Player { id: 1 };
 bus.add_subscriber(player1);
 ```
 
@@ -56,11 +77,11 @@ bus.add_subscriber(player1);
 
 ```rust
 pub struct Input {
-    emitter: EventEmitter<Commands>,
+    emitter: EventEmitter<Commands, TopicIds>,
 }
 
-impl Publisher<Commands> for Input {
-    fn get_mut_emitter(&mut self) -> &mut EventEmitter<Commands> {
+impl Publisher<Commands, TopicIds> for Input {
+    fn get_mut_emitter(&mut self) -> &mut EventEmitter<Commands, TopicIds> {
         &mut self.emitter
     }
 }
@@ -68,18 +89,18 @@ impl Publisher<Commands> for Input {
 ...
 
 let mut  input = Input::new();
-bus.add_publisher(&mut input);
+bus.add_publisher(&mut input, None); // None -> Auto assign ID
 
 ```
 
 ### 5. Send events
 
 ```rust
-impl Input {
-    pub fn send_move(&self, player_id: u32, x: f32, y: f32) {
-        self.emitter.publish(Commands::Move { player_id, x, y });
-    }
-}
+input.publish(  Commands::Move { dx: 1.0, dy: 2.0 }, 
+                Some(TopicIds::Player1) );
+                
+input.publish(  Commands::Atack, 
+                Some(TopicIds::Player2) );
 ```
 
 ## 📖 Examples
@@ -88,26 +109,25 @@ The following example demonstrates how to exchange events between players and an
 
 ```rust
 fn main() {
-    // Create a shared bus. No mutex as the internal data is already thread-safe.
-    let bus: Arc<EventBus<Commands>> = Arc::new(EventBus::new());
+    // Create a bus
+    let bus: EventBus<Commands, TopicIds> = EventBus::new();
 
-    // Players are subscribers = concurently accesible receivers of events.
-    // They have to be wrapped in Arc<Mutex<T>> to be thread-safe.
-    let player1 = Arc::new(Mutex::new(Player { id: 1 }));
-    let player2 = Arc::new(Mutex::new(Player { id: 2 }));
-    
-    // Input is a publisher. It has to know to which bus it should publish events.
+    // Create players, input, and attach to the bus
+    let player1 = Player { id: 1 };
+    let player2 = Player { id: 2 };
     let mut input = Input::new();
 
-    // Subscribers will be added to the bus's list
-    bus.add_subscriber(player1); 
+    bus.add_subscriber(player1);
     bus.add_subscriber(player2);
-    // Bus will register itslef to the input
-    bus.add_publisher(&mut input); 
+    bus.add_publisher(&mut input, Some(85)).unwrap();
 
     // Send some events
-    input.send_move(1, 1.0, 2.0);
-    input.send_atack(2);
+    input.publish(Commands::Move { dx: 1.0, dy: 2.0 }, 
+                  Some(TopicIds::Player2));
+    input.publish(Commands::Move { dx: 1.0, dy: 2.0 }, 
+                  Some(TopicIds::Player1));
+    input.publish(Commands::Atack, Some(TopicIds::Player2));
+    input.publish(Commands::Atack, Some(TopicIds::Player1));
 }
 ```
 

@@ -9,30 +9,35 @@
 // e-mail:  mail@agramakov.me
 //
 // *************************************************************************
+
 #[cfg(test)]
 mod tests;
 
-pub struct Event<ContentType> {
-    id: u64,
+/// A struct that represents an event that can be sent over the event bus.
+/// The content is user-defined. Besudes the content, the event has an id,
+/// a source id, and a topic id.
+pub struct BusEvent<ContentType, TopicId> {
+    id: usize,
+    topic_id: Option<TopicId>,
     source_id: u64,
     content: ContentType,
 }
 
-impl<ContentType> Event<ContentType> {
-    pub fn new(content: ContentType) -> Self {
-        Event {
-            id: 0,
-            source_id: 0,
+impl<ContentType, TopicId> BusEvent<ContentType, TopicId> {
+    pub fn new(id: usize, source_id: u64, topic_id: Option<TopicId>, content: ContentType) -> Self {
+        BusEvent {
+            id,
+            topic_id,
+            source_id,
             content,
         }
     }
 
-    pub fn set_header(&mut self, id: u64, source_id: u64) {
-        self.id = id;
-        self.source_id = source_id;
+    pub fn get_topic_id(&self) -> &Option<TopicId> {
+        &self.topic_id
     }
 
-    pub fn get_id(&self) -> u64 {
+    pub fn get_id(&self) -> usize {
         self.id
     }
 
@@ -46,19 +51,5 @@ impl<ContentType> Event<ContentType> {
 
     pub fn get_mut_content(&mut self) -> &mut ContentType {
         &mut self.content
-    }
-
-    pub fn set_id(&mut self, id: u64) {
-        self.id = id;
-    }
-}
-
-pub trait IntoEvent<ContentType> {
-    fn into_event(self) -> Event<ContentType>;
-}
-
-impl<ContentType> IntoEvent<ContentType> for ContentType {
-    fn into_event(self) -> Event<ContentType> {
-        Event::new(self)
     }
 }
