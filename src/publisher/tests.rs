@@ -13,16 +13,17 @@ struct TestSubscriber {
 impl Subscriber<TestEvent, u32> for TestSubscriber {
     fn on_event(&mut self, event: &BusEvent<TestEvent, u32>) {
         let content = event.get_content();
+        let source = event.get_source_id();
         if content.destination != self.id {
             println!(
-                "Subscriber {} ignoring event with content: {}",
-                self.id, content.value
+                "Subscriber {} ignoring event from ID{} with content: {}",
+                self.id, source, content.value
             );
             return;
         }
         println!(
-            "Subscriber {} received event with content: {}",
-            self.id, content.value
+            "Subscriber {} received event from ID{} with content: {}",
+            self.id,  source, content.value
         );
     }
 }
@@ -70,8 +71,8 @@ fn test_bus() {
 
     bus.add_subscriber_shared(subscriber1);
     bus.add_subscriber_shared(subscriber2);
-    bus.add_publisher(&mut publisher1);
-    bus.add_publisher(&mut publisher2);
+    bus.add_publisher(&mut publisher1, None).unwrap();
+    bus.add_publisher(&mut publisher2, Some(2)).unwrap();
 
     publisher1.publish_to(0);
     publisher1.publish_to(1);

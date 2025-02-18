@@ -30,10 +30,10 @@ fn test_subscriber() {
     let subscriber = Arc::new(Mutex::new(TestSubscriber { attribute: 0 }));
     bus.add_subscriber_shared(subscriber.clone());
 
-    bus.publish(42, Some(42));
+    bus.publish(42, Some(42), 0);
     assert_eq!(subscriber.lock().unwrap().attribute, 42);
     
     // The subscriber is not subscribed to this topic
-    bus.publish(24, Some(24));
+    bus.publish(24, Some(24), 1);
     assert_eq!(subscriber.lock().unwrap().attribute, 42);
 }

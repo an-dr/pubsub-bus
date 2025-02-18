@@ -53,8 +53,8 @@ fn test_bus() {
         value: 84,
     };
 
-    bus.publish(event42, None);
-    bus.publish(event24, None);
-    bus.publish(event64, None);
-    bus.publish(event84, None);
+    bus.publish(event42, None, 0);
+    bus.publish(event24, None, 0);
+    bus.publish(event64, None, 0);
+    bus.publish(event84, None, 0);
 }

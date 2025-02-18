@@ -15,6 +15,7 @@ use super::BusEvent;
 #[cfg(test)]
 mod tests;
 
+/// A trait that defines a subscriber to the event bus.
 pub trait Subscriber<ContentType, TopicId>: Send + Sync {
     fn get_subscribed_topics(&self) -> Option<Vec<TopicId>> {
         None
