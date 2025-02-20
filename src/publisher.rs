@@ -17,12 +17,12 @@ mod tests;
 
 /// EventEmitter is a struct that can be used to publish events to the event bus.
 /// It supposed to be used by the publisher.
-pub struct EventEmitter<ContentType, TopicId: std::cmp::PartialEq> {
+pub struct EventEmitter<ContentType, TopicId: std::cmp::PartialEq + Clone> {
     event_bus: Option<Arc<EventBusInternal<ContentType, TopicId>>>,
     source_id: u64,
 }
 
-impl<ContentType, TopicId: std::cmp::PartialEq> EventEmitter<ContentType, TopicId> {
+impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventEmitter<ContentType, TopicId> {
     pub fn with_bus(bus: &EventBus<ContentType, TopicId>) -> Self {
         Self {
             event_bus: Some(bus.get_internal()),
@@ -68,7 +68,7 @@ impl<ContentType, TopicId: std::cmp::PartialEq> EventEmitter<ContentType, TopicI
 
 /// Publisher is a trait that defines a publisher to the event bus.
 /// Publisher is expected to care an EventEmitter.
-pub trait Publisher<ContentType, TopicId: std::cmp::PartialEq> {
+pub trait Publisher<ContentType, TopicId: std::cmp::PartialEq + Clone> {
     /// Get the emitter of the publisher. Has to be implemented by the publisher.
     fn get_mut_emitter(&mut self) -> &mut EventEmitter<ContentType, TopicId>;
 

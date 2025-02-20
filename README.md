@@ -33,7 +33,7 @@ Features:
 ### 1. Add the dependency to your `Cargo.toml`
 
 ```toml
-pubsub-bus = "3.0.0"
+pubsub-bus = "3.1.0"
 ```
 
 ### 2. Create your events and a bus
@@ -63,6 +63,13 @@ impl Subscriber<Commands, TopicIds> for Player {
         let event_source_id = event.get_source_id();
         match event.get_content() {
          ...
+        }
+    }
+    
+    fn is_subscribed_to(&self, topic_id: &TopicIds) -> bool {
+        match topic_id {
+            TopicIds::Player1 => self.id == 1,
+            TopicIds::Player2 => self.id == 2,
         }
     }
 }

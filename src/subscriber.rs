@@ -16,10 +16,19 @@ use super::BusEvent;
 mod tests;
 
 /// A trait that defines a subscriber to the event bus.
-/// Override get_subscribed_topics to return a list of topics the subscriber is interested in.
-/// If the subscriber is interested in all topics, thre si a default implementation that returns None.
-/// Override on_event to handle the event.
+/// 
+/// Override `is_subscribed_to` to specify the topics the subscriber is interested in.
+/// The default implementation always returns true.
+/// 
+/// Override `on_event` to handle the event.
 pub trait Subscriber<ContentType, TopicId>: Send + Sync {
+    
+    #[allow(unused_variables)] // This is a default implementation
+    fn is_subscribed_to(&self, topic_id: &TopicId) -> bool {
+        true
+    }
+
+    #[deprecated(since="3.1.0", note="Please use `is_subscribed_to` instead. Using of both methods is not recommended.")]
     fn get_subscribed_topics(&self) -> Option<Vec<TopicId>> {
         None
     }

@@ -21,6 +21,10 @@ impl Subscriber<i32, u32> for TestSubscriber {
     fn get_subscribed_topics(&self) -> Option<Vec<u32>> {
         Some(vec![42])
     }
+    
+    fn is_subscribed_to(&self, topic_id: &u32) -> bool {
+        *topic_id == 42
+    }
 }
 
 #[test]

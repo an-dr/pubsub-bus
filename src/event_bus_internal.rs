@@ -14,7 +14,7 @@ use std::sync::{Arc, Mutex, RwLock};
 
 use crate::{BusEvent, Subscriber};
 
-pub struct EventBusInternal<ContentType, TopicId: std::cmp::PartialEq> {
+pub struct EventBusInternal<ContentType, TopicId: std::cmp::PartialEq + Clone> {
     next_event_id: Arc<Mutex<usize>>,
 
     // RwLock as we do not expect many writes, but many reads
@@ -24,7 +24,7 @@ pub struct EventBusInternal<ContentType, TopicId: std::cmp::PartialEq> {
     publishers: RwLock<Vec<u64>>,
 }
 
-impl<ContentType, TopicId: std::cmp::PartialEq> EventBusInternal<ContentType, TopicId> {
+impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<ContentType, TopicId> {
     pub fn new() -> Self {
         Self {
             next_event_id: Arc::new(Mutex::new(0)),
@@ -82,16 +82,26 @@ impl<ContentType, TopicId: std::cmp::PartialEq> EventBusInternal<ContentType, To
 
     pub fn publish(&self, event: ContentType, topic_id: Option<TopicId>, source_id: u64) {
         let id = self.get_next_id(); // reserve a new id for the event
-        let event_internal = BusEvent::new(id, source_id, topic_id, event);
+        let event_internal = BusEvent::new(id, source_id, topic_id.clone(), event);
 
         // notify all subscribers
         for s in self.subscribers.read().unwrap().iter() {
-            // if there are topics
-            let topics = s.lock().unwrap().get_subscribed_topics();
-            if let Some(topics) = topics {
-                // if the subscriber is not subscribed to the topic
-                if !topics.contains(event_internal.get_topic_id().as_ref().unwrap()) {
+            // If for a specific topic, check if the subscriber is interested in the topic
+            if topic_id.is_some() {
+                let topic_id = topic_id.as_ref().unwrap();
+                if !s.lock().unwrap().is_subscribed_to(topic_id) {
                     continue;
+                }
+
+                {
+                    // TODO: Remove this deprecated block in the next major release
+                    let topics = s.lock().unwrap().get_subscribed_topics();
+                    if let Some(topics) = topics {
+                        // if the subscriber is not subscribed to the topic
+                        if !topics.contains(event_internal.get_topic_id().as_ref().unwrap()) {
+                            continue;
+                        }
+                    }
                 }
             }
 
