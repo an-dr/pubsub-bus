@@ -89,7 +89,7 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
             // If for a specific topic, check if the subscriber is interested in the topic
             if topic_id.is_some() {
                 let topic_id = topic_id.as_ref().unwrap();
-                if !s.lock().unwrap().is_interested_in_topic(topic_id) {
+                if !s.lock().unwrap().is_subscribed_to(topic_id) {
                     continue;
                 }
 

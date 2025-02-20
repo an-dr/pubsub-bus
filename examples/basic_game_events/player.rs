@@ -25,7 +25,7 @@ impl Subscriber<Commands, TopicIds> for Player {
         }
     }
 
-    fn is_interested_in_topic(&self, topic_id: &TopicIds) -> bool {
+    fn is_subscribed_to(&self, topic_id: &TopicIds) -> bool {
         match topic_id {
             TopicIds::Player1 => self.id == 1,
             TopicIds::Player2 => self.id == 2,
