@@ -25,13 +25,10 @@ impl Subscriber<Commands, TopicIds> for Player {
         }
     }
 
-    fn get_subscribed_topics(&self) -> Option<Vec<TopicIds>> {
-        if self.id == 1 {
-            return Some(vec![TopicIds::Player1]);
+    fn is_interested_in_topic(&self, topic_id: &TopicIds) -> bool {
+        match topic_id {
+            TopicIds::Player1 => self.id == 1,
+            TopicIds::Player2 => self.id == 2,
         }
-        if self.id == 2 {
-            return Some(vec![TopicIds::Player2]);
-        }
-        None
     }
 }

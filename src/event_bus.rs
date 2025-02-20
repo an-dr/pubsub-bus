@@ -16,11 +16,11 @@ use std::sync::{Arc, Mutex};
 mod tests;
 
 /// The Event Bus itself. Add subscribers and publishers to it.
-pub struct EventBus<ContentType, TopicId: std::cmp::PartialEq> {
+pub struct EventBus<ContentType, TopicId: std::cmp::PartialEq + Clone> {
     internal: Arc<EventBusInternal<ContentType, TopicId>>,
 }
 
-impl<ContentType, TopicId: std::cmp::PartialEq> EventBus<ContentType, TopicId> {
+impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBus<ContentType, TopicId> {
     pub fn new() -> Self {
         Self {
             internal: Arc::new(EventBusInternal::new()),
