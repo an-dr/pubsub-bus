@@ -33,7 +33,7 @@ Features:
 ### 1. Add the dependency to your `Cargo.toml`
 
 ```toml
-pubsub-bus = "3.0.0"
+pubsub-bus = "3.1.0"
 ```
 
 ### 2. Create your events and a bus

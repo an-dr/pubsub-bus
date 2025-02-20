@@ -28,5 +28,10 @@ pub trait Subscriber<ContentType, TopicId>: Send + Sync {
         true
     }
 
+    #[deprecated(since="3.1.0", note="Please use `is_interested_in_topic` instead. Using of both methods is not recommended.")]
+    fn get_subscribed_topics(&self) -> Option<Vec<TopicId>> {
+        None
+    }
+
     fn on_event(&mut self, event: &BusEvent<ContentType, TopicId>);
 }

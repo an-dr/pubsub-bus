@@ -92,6 +92,17 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
                 if !s.lock().unwrap().is_interested_in_topic(topic_id) {
                     continue;
                 }
+
+                {
+                    // TODO: Remove this deprecated block in the next major release
+                    let topics = s.lock().unwrap().get_subscribed_topics();
+                    if let Some(topics) = topics {
+                        // if the subscriber is not subscribed to the topic
+                        if !topics.contains(event_internal.get_topic_id().as_ref().unwrap()) {
+                            continue;
+                        }
+                    }
+                }
             }
 
             s.lock().unwrap().on_event(&event_internal);
