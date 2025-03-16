@@ -14,7 +14,7 @@
 mod tests;
 
 /// A struct that represents an event that can be sent over the event bus.
-/// The content is user-defined. Besudes the content, the event has an id,
+/// The content is user-defined. Besides the content, the event has an id,
 /// a source id, and a topic id.
 pub struct BusEvent<ContentType, TopicId> {
     id: usize,

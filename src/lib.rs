@@ -9,13 +9,17 @@
 // e-mail:  mail@agramakov.me
 //
 // *************************************************************************
+mod bus_event;
 mod event_bus;
 mod event_bus_internal;
-mod bus_event;
 mod publisher;
+mod receiving_queue;
 mod subscriber;
 
-pub use event_bus::EventBus;
 pub use bus_event::BusEvent;
+pub use event_bus::EventBus;
 pub use publisher::{EventEmitter, Publisher};
+pub use receiving_queue::BusEventQueue;
+pub use receiving_queue::ReceivingQueue;
 pub use subscriber::Subscriber;
+pub use subscriber::SubscriberWithQueue;

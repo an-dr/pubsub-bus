@@ -10,28 +10,42 @@
 //
 // *************************************************************************\
 
+use crate::BusEventQueue;
+
 use super::BusEvent;
 
 #[cfg(test)]
 mod tests;
 
 /// A trait that defines a subscriber to the event bus.
-/// 
+///
 /// Override `is_subscribed_to` to specify the topics the subscriber is interested in.
 /// The default implementation always returns true.
-/// 
+///
 /// Override `on_event` to handle the event.
 pub trait Subscriber<ContentType, TopicId>: Send + Sync {
-    
     #[allow(unused_variables)] // This is a default implementation
     fn is_subscribed_to(&self, topic_id: &TopicId) -> bool {
         true
     }
 
-    #[deprecated(since="3.1.0", note="Please use `is_subscribed_to` instead. Using of both methods is not recommended.")]
+    #[deprecated(
+        since = "3.1.0",
+        note = "Please use `is_subscribed_to` instead. Using of both methods is not recommended."
+    )]
     fn get_subscribed_topics(&self) -> Option<Vec<TopicId>> {
         None
     }
 
     fn on_event(&mut self, event: &BusEvent<ContentType, TopicId>);
+}
+
+pub trait SubscriberWithQueue<ContentType, TopicId>:
+    Subscriber<ContentType, TopicId> + BusEventQueue<ContentType, TopicId>
+where
+    BusEvent<ContentType, TopicId>: Clone,
+{
+    fn on_event(&mut self, event: &BusEvent<ContentType, TopicId>) {
+        self.push_event(event.clone());
+    }
 }
