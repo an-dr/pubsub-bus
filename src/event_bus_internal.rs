@@ -10,6 +10,7 @@
 //
 // *************************************************************************
 
+use log::info;
 use std::sync::{Arc, Mutex, RwLock};
 
 use crate::{BusEvent, Subscriber};
@@ -37,7 +38,12 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
         &self,
         subscriber: Arc<Mutex<dyn Subscriber<ContentType, TopicId>>>,
     ) {
-        self.subscribers.write().unwrap().push(subscriber);
+        let mut subscribers = self
+            .subscribers
+            .write()
+            .expect("Failed to acquire write lock on subscribers");
+        subscribers.push(subscriber);
+        info!("Subscriber added successfully");
     }
 
     // Accepts any object implementing Subscriber and wraps it in Arc + Mutex
@@ -51,21 +57,21 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
     }
 
     pub fn register_publisher(&self, source_id: Option<u64>) -> Result<u64, &'static str> {
-        let mut publishers = self.publishers.write().unwrap();
+        let mut publishers = self
+            .publishers
+            .write()
+            .expect("Failed to acquire write lock on publishers");
         let id = match source_id {
-            // If the source_id is provided, check if it already exists
             Some(id) => {
                 if publishers.contains(&id) {
                     return Err("Publisher with the same id already exists");
                 }
                 id
             }
-            // If the source_id is not provided, assign a new id in sequence
             None => {
-                let mut id = 0;
-                while publishers.contains(&id) {
-                    id += 1;
-                }
+                let id = (0..)
+                    .find(|id| !publishers.contains(id))
+                    .expect("Failed to generate a new publisher ID");
                 id
             }
         };
@@ -86,26 +92,23 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
 
         // notify all subscribers
         for s in self.subscribers.read().unwrap().iter() {
+            let mut subscriber = s.lock().unwrap();
+
             // If for a specific topic, check if the subscriber is interested in the topic
-            if topic_id.is_some() {
-                let topic_id = topic_id.as_ref().unwrap();
-                if !s.lock().unwrap().is_subscribed_to(topic_id) {
+            if let Some(ref topic_id) = topic_id {
+                if !subscriber.is_subscribed_to(topic_id) {
                     continue;
                 }
 
-                {
-                    // TODO: Remove this deprecated block in the next major release
-                    let topics = s.lock().unwrap().get_subscribed_topics();
-                    if let Some(topics) = topics {
-                        // if the subscriber is not subscribed to the topic
-                        if !topics.contains(event_internal.get_topic_id().as_ref().unwrap()) {
-                            continue;
-                        }
+                // TODO: Remove this deprecated block in the next major release
+                if let Some(topics) = subscriber.get_subscribed_topics() {
+                    if !topics.contains(topic_id) {
+                        continue;
                     }
                 }
             }
 
-            s.lock().unwrap().on_event(&event_internal);
+            subscriber.on_event(&event_internal);
         }
     }
 }

@@ -11,6 +11,7 @@
 // *************************************************************************
 use crate::{event_bus_internal::EventBusInternal, EventBus};
 use std::sync::Arc;
+use log::{info, error};
 
 #[cfg(test)]
 mod tests;
@@ -48,19 +49,18 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventEmitter<ContentType
         let id = internal_bus.register_publisher(source_id)?;
 
         self.source_id = id;
-        self.event_bus = Some(bus.get_internal());
+        self.event_bus = Some(internal_bus);
         Ok(())
     }
 
     /// Publish an event to the event bus.
     /// If topic_id is None, the event will be sent to all subscribers.
-    pub fn publish(&mut self, content: ContentType, topic_id: Option<TopicId>) {
+    pub fn publish(&mut self, content: ContentType, topic_id: Option<TopicId>) -> Result<(), &'static str> {
         match &mut self.event_bus {
-            None => {
-                panic!("Publisher has no bus");
-            }
+            None => Err("Publisher has no bus"),
             Some(bus) => {
                 bus.publish(content, topic_id, self.source_id);
+                Ok(())
             }
         }
     }
@@ -75,6 +75,6 @@ pub trait Publisher<ContentType, TopicId: std::cmp::PartialEq + Clone> {
     /// Default implementation to Publish an event to the event bus.
     /// If topic_id is None, the event will be sent to all subscribers.
     fn publish(&mut self, content: ContentType, topic_id: Option<TopicId>) {
-        self.get_mut_emitter().publish(content, topic_id);
+        self.get_mut_emitter().publish(content, topic_id).unwrap();
     }
 }

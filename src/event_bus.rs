@@ -34,9 +34,11 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBus<ContentType, To
         self.internal.add_subscriber_shared(subscriber);
     }
 
+    /// Adds a subscriber to the event bus.
+    /// The subscriber must implement the `Subscriber` trait.
     pub fn add_subscriber<S>(&self, subscriber: S)
     where
-        S: Subscriber<ContentType, TopicId> + 'static, // Ensures it can be converted to a trait object
+        S: Subscriber<ContentType, TopicId> + 'static,
     {
         self.internal.add_subscriber(subscriber);
     }
@@ -48,7 +50,10 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBus<ContentType, To
         publisher: &mut dyn Publisher<ContentType, TopicId>,
         source_id: Option<u64>,
     ) -> Result<(), &'static str> {
-        publisher.get_mut_emitter().set_bus(self, source_id)
+        publisher
+            .get_mut_emitter()
+            .set_bus(self, source_id)
+            .map_err(|e| "Failed to add publisher to the event bus")
     }
 
     pub fn publish(&self, event: ContentType, topic_id: Option<TopicId>, source_id: u64) {
