@@ -53,7 +53,7 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBus<ContentType, To
         publisher
             .get_mut_emitter()
             .set_bus(self, source_id)
-            .map_err(|e| "Failed to add publisher to the event bus")
+            .map_err(|_| "Failed to add publisher to the event bus")
     }
 
     pub fn publish(&self, event: ContentType, topic_id: Option<TopicId>, source_id: u64) {

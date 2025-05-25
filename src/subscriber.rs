@@ -28,10 +28,11 @@ pub trait Subscriber<ContentType, TopicId>: Send + Sync {
         true
     }
 
-    #[deprecated(since="3.1.0", note="Please use `is_subscribed_to` instead. Using of both methods is not recommended.")]
-    fn get_subscribed_topics(&self) -> Option<Vec<TopicId>> {
-        None
-    }
-
+    /// Handles an incoming event.
+    ///
+    /// **Note**: Implementations of this method should aim to be efficient and
+    /// non-blocking. Slow or blocking operations within `on_event` can delay
+    /// event propagation to other subscribers, as the event bus processes
+    /// subscribers sequentially for each event.
     fn on_event(&mut self, event: &BusEvent<ContentType, TopicId>);
 }

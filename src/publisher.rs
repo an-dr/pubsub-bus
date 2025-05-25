@@ -11,7 +11,6 @@
 // *************************************************************************
 use crate::{event_bus_internal::EventBusInternal, EventBus};
 use std::sync::Arc;
-use log::{info, error};
 
 #[cfg(test)]
 mod tests;

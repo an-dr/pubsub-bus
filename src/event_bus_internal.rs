@@ -53,7 +53,7 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
     {
         let subscriber = Arc::new(Mutex::new(subscriber));
 
-        self.subscribers.write().unwrap().push(subscriber);
+        self.subscribers.write().expect("Failed to acquire write lock on subscribers for add_subscriber").push(subscriber);
     }
 
     pub fn register_publisher(&self, source_id: Option<u64>) -> Result<u64, &'static str> {
@@ -81,7 +81,7 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
     }
 
     pub fn get_next_id(&self) -> usize {
-        let mut id = self.next_event_id.lock().unwrap();
+        let mut id = self.next_event_id.lock().expect("Failed to lock next_event_id for incrementing");
         *id += 1;
         *id
     }
@@ -91,20 +91,19 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
         let event_internal = BusEvent::new(id, source_id, topic_id.clone(), event);
 
         // notify all subscribers
-        for s in self.subscribers.read().unwrap().iter() {
-            let mut subscriber = s.lock().unwrap();
+        for s in self.subscribers.read().expect("Failed to acquire read lock on subscribers for publish").iter() {
+            let mut subscriber = match s.lock() {
+                Ok(guard) => guard,
+                Err(poisoned) => {
+                    log::error!("A subscriber mutex was poisoned. Skipping event delivery to this subscriber. Error: {}", poisoned);
+                    continue;
+                }
+            };
 
             // If for a specific topic, check if the subscriber is interested in the topic
             if let Some(ref topic_id) = topic_id {
                 if !subscriber.is_subscribed_to(topic_id) {
                     continue;
-                }
-
-                // TODO: Remove this deprecated block in the next major release
-                if let Some(topics) = subscriber.get_subscribed_topics() {
-                    if !topics.contains(topic_id) {
-                        continue;
-                    }
                 }
             }
 

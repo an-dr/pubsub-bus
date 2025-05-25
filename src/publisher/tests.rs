@@ -48,7 +48,7 @@ impl TestPublisher {
             value: self.publisher_value,
         };
 
-        self.emitter.publish(event, None);
+        self.emitter.publish(event, None).unwrap();
     }
 }
 
