@@ -24,8 +24,7 @@ pub struct EventBusInternal<ContentType, TopicId: std::cmp::PartialEq + Clone> {
     // Publisher IDs
     publishers: RwLock<Vec<u64>>,
 
-    // Deferred delivery queue for enqueue()/dispatch(). Kept separate from
-    // `publish`, which stays immediate and synchronous for existing callers.
+    // Deferred delivery queue for enqueue()/dispatch(); publish() is unaffected.
     outbox: Mutex<VecDeque<(ContentType, Option<TopicId>, u64)>>,
 }
 
@@ -103,12 +102,9 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
         let id = self.get_next_id(); // reserve a new id for the event
         let event_internal = BusEvent::new(id, source_id, topic_id.clone(), event);
 
-        // Snapshot the subscriber list and drop the RwLock read guard before
-        // invoking any callback. Holding the guard across on_event would
-        // make a subscriber that publishes reentrantly (a common pattern:
-        // reacting to a message by sending another one) take a nested read
-        // lock on the same RwLock, which std::sync::RwLock does not
-        // guarantee to be deadlock-free.
+        // Snapshot and drop the read guard before invoking callbacks --
+        // holding it across on_event risks a nested-read deadlock if a
+        // subscriber publishes reentrantly (RwLock recursion is unsafe).
         let subscribers: Vec<_> = self.subscribers.read().unwrap().iter().cloned().collect();
 
         for s in subscribers.iter() {
@@ -136,22 +132,16 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
         }
     }
 
-    /// Queues an event for later delivery via `dispatch()`, instead of
-    /// delivering it immediately like `publish()` does. Never touches the
-    /// subscriber list or any subscriber's own lock, so it is always safe
-    /// to call from inside a `Subscriber::on_event` callback -- unlike
-    /// calling `publish()` reentrantly from there, which deadlocks on the
-    /// currently-executing subscriber's own `Mutex` (see the tests).
+    /// Queues an event for `dispatch()` instead of delivering it now.
+    /// Unlike `publish()`, safe to call reentrantly from `on_event`
+    /// (touches only the outbox, never the subscriber list or its locks).
     pub fn enqueue(&self, event: ContentType, topic_id: Option<TopicId>, source_id: u64) {
         self.outbox.lock().unwrap().push_back((event, topic_id, source_id));
     }
 
-    /// Delivers, in enqueue order, every event queued since the last
-    /// `dispatch()` call, via the same `publish()` used for immediate
-    /// delivery. A single pass: events a subscriber enqueues reactively
-    /// during this call are not delivered until the *next* `dispatch()`
-    /// call -- this is what makes reentrant `enqueue()` from `on_event`
-    /// deadlock-safe, and bounds the work done per call.
+    /// Delivers everything queued since the last call, in order, via
+    /// `publish()`. Single pass: events enqueued reactively during this
+    /// call wait for the next `dispatch()`.
     pub fn dispatch(&self) {
         let batch: Vec<_> = self.outbox.lock().unwrap().drain(..).collect();
         for (event, topic_id, source_id) in batch {
