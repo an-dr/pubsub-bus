@@ -96,25 +96,10 @@ fn remove_subscriber_not_present_is_a_no_op() {
     bus.remove_subscriber_shared(&subscriber);
 }
 
-// NOTE on scope, found while testing this fix: this crate locks each
-// subscriber's own `Mutex` even just to call `is_subscribed_to` on it
-// during a publish pass, and again (held for the full call) for `on_event`.
-// A `publish()` called reentrantly from inside `on_event` will therefore
-// always try to re-lock the *currently executing* subscriber's own Mutex as
-// soon as that subscriber is reached in the reentrant pass's iteration --
-// std::sync::Mutex is not reentrant, so this deadlocks unconditionally,
-// regardless of topic filtering (is_subscribed_to itself requires the lock)
-// and regardless of the snapshot-before-callback fix below (that fix only
-// removes the RwLock-recursion hazard on `subscribers`, a different lock).
-// Making reentrant publish safe in general would require replacing this
-// per-subscriber Mutex with a reentrant lock, which is a larger design
-// change than this fix and has its own correctness tradeoffs (a subscriber
-// re-entering its own on_event while mid-mutation of its fields). Out of
-// scope here. Consumers that cannot guarantee their subscription graph
-// never re-enters a still-executing subscriber (bones' Adapter cannot,
-// since is_subscribed_to always returns true there) must defer delivery
-// outside the on_event call stack entirely -- never call publish() from
-// within a Subscriber's on_event.
+// Reentrant publish() still deadlocks unconditionally on the currently-
+// executing subscriber's own Mutex (locked for is_subscribed_to too, not
+// just on_event) -- topic filtering doesn't help. Use enqueue()/dispatch()
+// for reactive publishing instead; see that regression test below.
 struct CountingSubscriber2 {
     count: Arc<Mutex<u32>>,
 }
@@ -127,9 +112,6 @@ impl Subscriber<TestEvent, u32> for CountingSubscriber2 {
 
 #[test]
 fn snapshotting_subscribers_does_not_change_delivery_to_a_stable_list() {
-    // Regression coverage for the snapshot-before-callback refactor itself:
-    // with an unchanging subscriber list, every publish must still reach
-    // every subscriber exactly once, in the order published.
     let bus = EventBus::new();
     let count = Arc::new(Mutex::new(0));
     let subscriber = Arc::new(Mutex::new(CountingSubscriber2 {
@@ -146,10 +128,6 @@ fn snapshotting_subscribers_does_not_change_delivery_to_a_stable_list() {
 
 #[test]
 fn a_subscriber_added_during_the_snapshot_window_is_not_notified_of_the_in_flight_event() {
-    // Documents the snapshot's actual semantic: publish() delivers to who
-    // was subscribed at snapshot time, not to whoever ends up subscribed by
-    // the time delivery finishes. Subscribers added after a publish() call
-    // returns see only subsequent events, same as before this fix.
     let bus = EventBus::new();
     let count = Arc::new(Mutex::new(0));
 
@@ -207,11 +185,8 @@ fn dispatch_delivers_queued_events_in_order() {
     assert_eq!(*values.lock().unwrap(), vec![1, 2, 3]);
 }
 
-// The regression test for the whole feature: enqueue() never touches the
-// subscribers RwLock or any subscriber's own Mutex, so -- unlike calling
-// publish() reentrantly, which deadlocks unconditionally on the
-// currently-executing subscriber's own Mutex -- calling enqueue() from
-// inside on_event is always safe, with no topic-filtering trick required.
+// enqueue() touches only the outbox, never a subscriber lock, so unlike
+// publish() this is always safe to call reentrantly from on_event.
 struct ReactiveEnqueueSubscriber {
     internal: Arc<crate::event_bus_internal::EventBusInternal<TestEvent, u32>>,
     already_fired: bool,

@@ -64,9 +64,8 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBus<ContentType, To
         self.internal.publish(event, topic_id, source_id);
     }
 
-    /// Queues an event for delivery on the next `dispatch()` call, rather
-    /// than delivering it immediately. Safe to call from inside a
-    /// `Subscriber::on_event` (unlike `publish()` — see `dispatch()`'s docs).
+    /// Queues an event for the next `dispatch()`. Unlike `publish()`, safe
+    /// to call reentrantly from `on_event`.
     pub fn enqueue(&self, event: ContentType, topic_id: Option<TopicId>, source_id: u64) {
         self.internal.enqueue(event, topic_id, source_id);
     }
