@@ -165,3 +165,91 @@ fn a_subscriber_added_during_the_snapshot_window_is_not_notified_of_the_in_fligh
     bus.publish(TestEvent { destination: 1, value: 2 }, None, 0);
     assert_eq!(*count.lock().unwrap(), 1);
 }
+
+struct RecordingValueSubscriber {
+    values: Arc<Mutex<Vec<i32>>>,
+}
+
+impl Subscriber<TestEvent, u32> for RecordingValueSubscriber {
+    fn on_event(&mut self, event: &BusEvent<TestEvent, u32>) {
+        self.values.lock().unwrap().push(event.get_content().value);
+    }
+}
+
+#[test]
+fn enqueue_without_dispatch_does_not_deliver() {
+    let bus = EventBus::new();
+    let values = Arc::new(Mutex::new(Vec::new()));
+    let subscriber = Arc::new(Mutex::new(RecordingValueSubscriber {
+        values: values.clone(),
+    }));
+    bus.add_subscriber_shared(subscriber);
+
+    bus.enqueue(TestEvent { destination: 1, value: 1 }, None, 0);
+
+    assert!(values.lock().unwrap().is_empty());
+}
+
+#[test]
+fn dispatch_delivers_queued_events_in_order() {
+    let bus = EventBus::new();
+    let values = Arc::new(Mutex::new(Vec::new()));
+    let subscriber = Arc::new(Mutex::new(RecordingValueSubscriber {
+        values: values.clone(),
+    }));
+    bus.add_subscriber_shared(subscriber);
+
+    bus.enqueue(TestEvent { destination: 1, value: 1 }, None, 0);
+    bus.enqueue(TestEvent { destination: 1, value: 2 }, None, 0);
+    bus.enqueue(TestEvent { destination: 1, value: 3 }, None, 0);
+    bus.dispatch();
+
+    assert_eq!(*values.lock().unwrap(), vec![1, 2, 3]);
+}
+
+// The regression test for the whole feature: enqueue() never touches the
+// subscribers RwLock or any subscriber's own Mutex, so -- unlike calling
+// publish() reentrantly, which deadlocks unconditionally on the
+// currently-executing subscriber's own Mutex -- calling enqueue() from
+// inside on_event is always safe, with no topic-filtering trick required.
+struct ReactiveEnqueueSubscriber {
+    internal: Arc<crate::event_bus_internal::EventBusInternal<TestEvent, u32>>,
+    already_fired: bool,
+}
+
+impl Subscriber<TestEvent, u32> for ReactiveEnqueueSubscriber {
+    fn on_event(&mut self, _event: &BusEvent<TestEvent, u32>) {
+        if !self.already_fired {
+            self.already_fired = true;
+            self.internal
+                .enqueue(TestEvent { destination: 1, value: 99 }, None, 0);
+        }
+    }
+}
+
+#[test]
+fn reactive_enqueue_from_on_event_does_not_deadlock_and_waits_for_next_dispatch() {
+    let bus: EventBus<TestEvent, u32> = EventBus::new();
+    let values = Arc::new(Mutex::new(Vec::new()));
+
+    let reactive = Arc::new(Mutex::new(ReactiveEnqueueSubscriber {
+        internal: bus.get_internal(),
+        already_fired: false,
+    }));
+    let recorder = Arc::new(Mutex::new(RecordingValueSubscriber {
+        values: values.clone(),
+    }));
+    bus.add_subscriber_shared(reactive);
+    bus.add_subscriber_shared(recorder);
+
+    bus.enqueue(TestEvent { destination: 1, value: 1 }, None, 0);
+    bus.dispatch();
+    assert_eq!(
+        *values.lock().unwrap(),
+        vec![1],
+        "reactively-enqueued event must not appear within the same dispatch"
+    );
+
+    bus.dispatch();
+    assert_eq!(*values.lock().unwrap(), vec![1, 99]);
+}

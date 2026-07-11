@@ -10,6 +10,7 @@
 //
 // *************************************************************************
 
+use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, RwLock};
 
 use crate::{BusEvent, Subscriber};
@@ -22,6 +23,10 @@ pub struct EventBusInternal<ContentType, TopicId: std::cmp::PartialEq + Clone> {
 
     // Publisher IDs
     publishers: RwLock<Vec<u64>>,
+
+    // Deferred delivery queue for enqueue()/dispatch(). Kept separate from
+    // `publish`, which stays immediate and synchronous for existing callers.
+    outbox: Mutex<VecDeque<(ContentType, Option<TopicId>, u64)>>,
 }
 
 impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<ContentType, TopicId> {
@@ -30,6 +35,7 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
             next_event_id: Arc::new(Mutex::new(0)),
             subscribers: RwLock::new(Vec::new()),
             publishers: RwLock::new(Vec::new()),
+            outbox: Mutex::new(VecDeque::new()),
         }
     }
 
@@ -127,6 +133,29 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
             }
 
             s.lock().unwrap().on_event(&event_internal);
+        }
+    }
+
+    /// Queues an event for later delivery via `dispatch()`, instead of
+    /// delivering it immediately like `publish()` does. Never touches the
+    /// subscriber list or any subscriber's own lock, so it is always safe
+    /// to call from inside a `Subscriber::on_event` callback -- unlike
+    /// calling `publish()` reentrantly from there, which deadlocks on the
+    /// currently-executing subscriber's own `Mutex` (see the tests).
+    pub fn enqueue(&self, event: ContentType, topic_id: Option<TopicId>, source_id: u64) {
+        self.outbox.lock().unwrap().push_back((event, topic_id, source_id));
+    }
+
+    /// Delivers, in enqueue order, every event queued since the last
+    /// `dispatch()` call, via the same `publish()` used for immediate
+    /// delivery. A single pass: events a subscriber enqueues reactively
+    /// during this call are not delivered until the *next* `dispatch()`
+    /// call -- this is what makes reentrant `enqueue()` from `on_event`
+    /// deadlock-safe, and bounds the work done per call.
+    pub fn dispatch(&self) {
+        let batch: Vec<_> = self.outbox.lock().unwrap().drain(..).collect();
+        for (event, topic_id, source_id) in batch {
+            self.publish(event, topic_id, source_id);
         }
     }
 }
