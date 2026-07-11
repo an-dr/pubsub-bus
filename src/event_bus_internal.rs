@@ -40,6 +40,19 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
         self.subscribers.write().unwrap().push(subscriber);
     }
 
+    // Removes a subscriber previously added via `add_subscriber_shared`,
+    // identified by pointer identity. No-op if it is not present (e.g.
+    // already removed).
+    pub fn remove_subscriber_shared(
+        &self,
+        subscriber: &Arc<Mutex<dyn Subscriber<ContentType, TopicId>>>,
+    ) {
+        self.subscribers
+            .write()
+            .unwrap()
+            .retain(|s| !Arc::ptr_eq(s, subscriber));
+    }
+
     // Accepts any object implementing Subscriber and wraps it in Arc + Mutex
     pub fn add_subscriber<S>(&self, subscriber: S)
     where
@@ -84,8 +97,15 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
         let id = self.get_next_id(); // reserve a new id for the event
         let event_internal = BusEvent::new(id, source_id, topic_id.clone(), event);
 
-        // notify all subscribers
-        for s in self.subscribers.read().unwrap().iter() {
+        // Snapshot the subscriber list and drop the RwLock read guard before
+        // invoking any callback. Holding the guard across on_event would
+        // make a subscriber that publishes reentrantly (a common pattern:
+        // reacting to a message by sending another one) take a nested read
+        // lock on the same RwLock, which std::sync::RwLock does not
+        // guarantee to be deadlock-free.
+        let subscribers: Vec<_> = self.subscribers.read().unwrap().iter().cloned().collect();
+
+        for s in subscribers.iter() {
             // If for a specific topic, check if the subscriber is interested in the topic
             if topic_id.is_some() {
                 let topic_id = topic_id.as_ref().unwrap();
@@ -95,6 +115,7 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
 
                 {
                     // TODO: Remove this deprecated block in the next major release
+                    #[allow(deprecated)]
                     let topics = s.lock().unwrap().get_subscribed_topics();
                     if let Some(topics) = topics {
                         // if the subscriber is not subscribed to the topic

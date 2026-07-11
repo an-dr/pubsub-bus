@@ -34,6 +34,15 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBus<ContentType, To
         self.internal.add_subscriber_shared(subscriber);
     }
 
+    /// Removes a subscriber previously added via `add_subscriber_shared`,
+    /// identified by pointer identity. No-op if it is not present.
+    pub fn remove_subscriber_shared(
+        &self,
+        subscriber: &Arc<Mutex<dyn Subscriber<ContentType, TopicId>>>,
+    ) {
+        self.internal.remove_subscriber_shared(subscriber);
+    }
+
     pub fn add_subscriber<S>(&self, subscriber: S)
     where
         S: Subscriber<ContentType, TopicId> + 'static, // Ensures it can be converted to a trait object
