@@ -15,11 +15,13 @@ use std::sync::{Arc, Mutex, RwLock};
 
 use crate::{BusEvent, Subscriber};
 
+pub(crate) type SharedSubscriber<ContentType, TopicId> = Arc<Mutex<dyn Subscriber<ContentType, TopicId>>>;
+
 pub struct EventBusInternal<ContentType, TopicId: std::cmp::PartialEq + Clone> {
     next_event_id: Arc<Mutex<usize>>,
 
     // RwLock as we do not expect many writes, but many reads
-    subscribers: RwLock<Vec<Arc<Mutex<dyn Subscriber<ContentType, TopicId>>>>>,
+    subscribers: RwLock<Vec<SharedSubscriber<ContentType, TopicId>>>,
 
     // Publisher IDs
     publishers: RwLock<Vec<u64>>,
@@ -40,7 +42,7 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
 
     pub fn add_subscriber_shared(
         &self,
-        subscriber: Arc<Mutex<dyn Subscriber<ContentType, TopicId>>>,
+        subscriber: SharedSubscriber<ContentType, TopicId>,
     ) {
         self.subscribers.write().unwrap().push(subscriber);
     }
@@ -50,7 +52,7 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
     // already removed).
     pub fn remove_subscriber_shared(
         &self,
-        subscriber: &Arc<Mutex<dyn Subscriber<ContentType, TopicId>>>,
+        subscriber: &SharedSubscriber<ContentType, TopicId>,
     ) {
         self.subscribers
             .write()
@@ -108,27 +110,27 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
         let subscribers: Vec<_> = self.subscribers.read().unwrap().iter().cloned().collect();
 
         for s in subscribers.iter() {
-            // If for a specific topic, check if the subscriber is interested in the topic
-            if topic_id.is_some() {
-                let topic_id = topic_id.as_ref().unwrap();
-                if !s.lock().unwrap().is_subscribed_to(topic_id) {
+            // One lock per subscriber per event, not two-or-three: the
+            // subscription check and the delivery itself share a single
+            // guard instead of each re-locking the same Mutex.
+            let mut guard = s.lock().unwrap();
+
+            if let Some(topic_id) = &topic_id {
+                if !guard.is_subscribed_to(topic_id) {
                     continue;
                 }
 
-                {
-                    // TODO: Remove this deprecated block in the next major release
-                    #[allow(deprecated)]
-                    let topics = s.lock().unwrap().get_subscribed_topics();
-                    if let Some(topics) = topics {
-                        // if the subscriber is not subscribed to the topic
-                        if !topics.contains(event_internal.get_topic_id().as_ref().unwrap()) {
-                            continue;
-                        }
+                // TODO: Remove this deprecated block in the next major release
+                #[allow(deprecated)]
+                if let Some(topics) = guard.get_subscribed_topics() {
+                    // if the subscriber is not subscribed to the topic
+                    if !topics.contains(event_internal.get_topic_id().as_ref().unwrap()) {
+                        continue;
                     }
                 }
             }
 
-            s.lock().unwrap().on_event(&event_internal);
+            guard.on_event(&event_internal);
         }
     }
 
