@@ -66,6 +66,12 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventEmitter<ContentType
     }
 }
 
+impl<ContentType, TopicId: std::cmp::PartialEq + Clone> Default for EventEmitter<ContentType, TopicId> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Publisher is a trait that defines a publisher to the event bus.
 /// Publisher is expected to care an EventEmitter.
 pub trait Publisher<ContentType, TopicId: std::cmp::PartialEq + Clone> {

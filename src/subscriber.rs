@@ -16,12 +16,17 @@ use super::BusEvent;
 mod tests;
 
 /// A trait that defines a subscriber to the event bus.
-/// 
+///
 /// Override `is_subscribed_to` to specify the topics the subscriber is interested in.
 /// The default implementation always returns true.
-/// 
+///
 /// Override `on_event` to handle the event.
-pub trait Subscriber<ContentType, TopicId>: Send + Sync {
+///
+/// Only `Send` is required, not `Sync`: subscribers are always reached
+/// through an `Arc<Mutex<dyn Subscriber<..>>>`, and `Arc<Mutex<T>>` is
+/// itself `Send + Sync` whenever `T: Send` -- the trait does not need to
+/// promise interior thread-safety on its own.
+pub trait Subscriber<ContentType, TopicId>: Send {
     
     #[allow(unused_variables)] // This is a default implementation
     fn is_subscribed_to(&self, topic_id: &TopicId) -> bool {

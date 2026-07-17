@@ -10,18 +10,24 @@
 //
 // *************************************************************************
 
+use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, RwLock};
 
 use crate::{BusEvent, Subscriber};
+
+pub(crate) type SharedSubscriber<ContentType, TopicId> = Arc<Mutex<dyn Subscriber<ContentType, TopicId>>>;
 
 pub struct EventBusInternal<ContentType, TopicId: std::cmp::PartialEq + Clone> {
     next_event_id: Arc<Mutex<usize>>,
 
     // RwLock as we do not expect many writes, but many reads
-    subscribers: RwLock<Vec<Arc<Mutex<dyn Subscriber<ContentType, TopicId>>>>>,
+    subscribers: RwLock<Vec<SharedSubscriber<ContentType, TopicId>>>,
 
     // Publisher IDs
     publishers: RwLock<Vec<u64>>,
+
+    // Deferred delivery queue for enqueue()/dispatch(); publish() is unaffected.
+    outbox: Mutex<VecDeque<(ContentType, Option<TopicId>, u64)>>,
 }
 
 impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<ContentType, TopicId> {
@@ -30,14 +36,28 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
             next_event_id: Arc::new(Mutex::new(0)),
             subscribers: RwLock::new(Vec::new()),
             publishers: RwLock::new(Vec::new()),
+            outbox: Mutex::new(VecDeque::new()),
         }
     }
 
     pub fn add_subscriber_shared(
         &self,
-        subscriber: Arc<Mutex<dyn Subscriber<ContentType, TopicId>>>,
+        subscriber: SharedSubscriber<ContentType, TopicId>,
     ) {
         self.subscribers.write().unwrap().push(subscriber);
+    }
+
+    // Removes a subscriber previously added via `add_subscriber_shared`,
+    // identified by pointer identity. No-op if it is not present (e.g.
+    // already removed).
+    pub fn remove_subscriber_shared(
+        &self,
+        subscriber: &SharedSubscriber<ContentType, TopicId>,
+    ) {
+        self.subscribers
+            .write()
+            .unwrap()
+            .retain(|s| !Arc::ptr_eq(s, subscriber));
     }
 
     // Accepts any object implementing Subscriber and wraps it in Arc + Mutex
@@ -84,28 +104,50 @@ impl<ContentType, TopicId: std::cmp::PartialEq + Clone> EventBusInternal<Content
         let id = self.get_next_id(); // reserve a new id for the event
         let event_internal = BusEvent::new(id, source_id, topic_id.clone(), event);
 
-        // notify all subscribers
-        for s in self.subscribers.read().unwrap().iter() {
-            // If for a specific topic, check if the subscriber is interested in the topic
-            if topic_id.is_some() {
-                let topic_id = topic_id.as_ref().unwrap();
-                if !s.lock().unwrap().is_subscribed_to(topic_id) {
+        // Snapshot and drop the read guard before invoking callbacks --
+        // holding it across on_event risks a nested-read deadlock if a
+        // subscriber publishes reentrantly (RwLock recursion is unsafe).
+        let subscribers: Vec<_> = self.subscribers.read().unwrap().iter().cloned().collect();
+
+        for s in subscribers.iter() {
+            // One lock per subscriber per event, not two-or-three: the
+            // subscription check and the delivery itself share a single
+            // guard instead of each re-locking the same Mutex.
+            let mut guard = s.lock().unwrap();
+
+            if let Some(topic_id) = &topic_id {
+                if !guard.is_subscribed_to(topic_id) {
                     continue;
                 }
 
-                {
-                    // TODO: Remove this deprecated block in the next major release
-                    let topics = s.lock().unwrap().get_subscribed_topics();
-                    if let Some(topics) = topics {
-                        // if the subscriber is not subscribed to the topic
-                        if !topics.contains(event_internal.get_topic_id().as_ref().unwrap()) {
-                            continue;
-                        }
+                // TODO: Remove this deprecated block in the next major release
+                #[allow(deprecated)]
+                if let Some(topics) = guard.get_subscribed_topics() {
+                    // if the subscriber is not subscribed to the topic
+                    if !topics.contains(event_internal.get_topic_id().as_ref().unwrap()) {
+                        continue;
                     }
                 }
             }
 
-            s.lock().unwrap().on_event(&event_internal);
+            guard.on_event(&event_internal);
+        }
+    }
+
+    /// Queues an event for `dispatch()` instead of delivering it now.
+    /// Unlike `publish()`, safe to call reentrantly from `on_event`
+    /// (touches only the outbox, never the subscriber list or its locks).
+    pub fn enqueue(&self, event: ContentType, topic_id: Option<TopicId>, source_id: u64) {
+        self.outbox.lock().unwrap().push_back((event, topic_id, source_id));
+    }
+
+    /// Delivers everything queued since the last call, in order, via
+    /// `publish()`. Single pass: events enqueued reactively during this
+    /// call wait for the next `dispatch()`.
+    pub fn dispatch(&self) {
+        let batch: Vec<_> = self.outbox.lock().unwrap().drain(..).collect();
+        for (event, topic_id, source_id) in batch {
+            self.publish(event, topic_id, source_id);
         }
     }
 }
